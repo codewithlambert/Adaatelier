@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <style>
+    path { fill: #141414; stroke: #141414; }
+    @media (prefers-color-scheme: dark) { path { fill: #f5f5f5; stroke: #f5f5f5; } }
+  </style>
+  <path d="M11 13V10.5a5 5 0 0 1 10 0V13" style="fill:none" stroke-width="2.2"/>
+  <path d="M5.5 13H26.5L28.5 29H3.5ZM16 25C16 25 11 21.8 11 18.9C11 17.3 12.2 16.2 13.6 16.2C14.6 16.2 15.5 16.8 16 17.7C16.5 16.8 17.4 16.2 18.4 16.2C19.8 16.2 21 17.3 21 18.9C21 21.8 16 25 16 25Z" fill-rule="evenodd" style="stroke:none"/>
+</svg>
