@@ -12,4 +12,7 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  // Self-hosted on pxxl: build a plain Node server (`npm start` runs .output/server/index.mjs).
+  // NITRO_PRESET still overrides it; Lovable's own builds pin their preset regardless.
+  nitro: { preset: process.env.NITRO_PRESET || "node-server" },
 });
