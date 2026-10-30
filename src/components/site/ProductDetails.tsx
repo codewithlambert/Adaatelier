@@ -31,6 +31,27 @@ export function ProductDetails({ product: p, initialColor = "onyx", onColorChang
   // the 3D view leads; then the photo and a close-up crop of it
   const shots = [p.focus ?? "50% 50%", "50% 30%"];
 
+  const slides = ["3D view", "Photo", "Detail"];
+  const [slide, setSlide] = useState(0);
+  const goTo = (i: number) => {
+    const el = gallery.current?.children[i] as HTMLElement | undefined;
+    gallery.current?.scrollTo({ left: (el?.offsetLeft ?? 0) - 20, behavior: "smooth" });
+  };
+  const onGalleryScroll = () => {
+    const g = gallery.current;
+    if (!g) return;
+    const kids = [...g.children] as HTMLElement[];
+    let best = 0;
+    kids.forEach((k, i) => {
+      if (
+        Math.abs(k.offsetLeft - 20 - g.scrollLeft) <
+        Math.abs((kids[best]?.offsetLeft ?? 0) - 20 - g.scrollLeft)
+      )
+        best = i;
+    });
+    setSlide(best);
+  };
+
   const pick = (c: ColorId) => {
     setColor(c);
     onColorChange?.(c);
@@ -55,37 +76,59 @@ export function ProductDetails({ product: p, initialColor = "onyx", onColorChang
 
   return (
     <section className="mx-auto grid w-full max-w-[1440px] gap-10 px-5 pb-24 pt-24 sm:px-8 md:grid-cols-[1.25fr_1fr] md:gap-16 md:pt-32 lg:px-12">
-      {/* Gallery: horizontal swipe on mobile, grid on desktop */}
-      <div
-        ref={gallery}
-        className="-mx-5 flex snap-x snap-mandatory gap-2 overflow-x-auto [scrollbar-width:none] md:mx-0 md:grid md:grid-cols-2 md:gap-3 md:overflow-visible"
-      >
-        <div className="relative w-[88%] shrink-0 snap-center bg-surface md:col-span-2 md:w-auto">
-          <BagViewer3D
-            model={p.model}
-            color={color}
-            label={`${p.name} in ${colorName(color)}`}
-            className="aspect-[4/5] w-full md:aspect-[5/4]"
-          />
-        </div>
-        {shots.map((pos, i) => (
-          <div
-            key={pos}
-            data-img-reveal
-            className="relative w-[88%] shrink-0 snap-center overflow-hidden bg-surface md:w-auto"
-          >
-            <span data-shot={i === 0 ? "" : undefined} className="block">
-              <TintedImage
-                src={p.img}
-                mask={p.mask}
-                color={color}
-                objectPosition={pos}
-                alt={i === 0 ? `${p.name} in ${colorName(color)}` : `${p.name}, detail`}
-                className={`block aspect-[4/5] w-full object-cover ${i === 0 ? "" : "scale-150"}`}
-              />
-            </span>
+      {/* Gallery: swipeable slides with a picker on mobile, grid on desktop */}
+      <div className="min-w-0">
+        <div
+          ref={gallery}
+          onScroll={onGalleryScroll}
+          className="relative -mx-5 flex snap-x snap-mandatory scroll-px-5 gap-2 overflow-x-auto px-5 [scrollbar-width:none] md:mx-0 md:grid md:grid-cols-2 md:gap-3 md:overflow-visible md:px-0"
+        >
+          <div className="relative w-[82%] shrink-0 snap-start bg-surface md:col-span-2 md:w-auto">
+            <BagViewer3D
+              model={p.model}
+              color={color}
+              label={`${p.name} in ${colorName(color)}`}
+              className="aspect-[4/5] w-full md:aspect-[5/4]"
+            />
           </div>
-        ))}
+          {shots.map((pos, i) => (
+            <div
+              key={pos}
+              data-img-reveal
+              className="relative w-[82%] shrink-0 snap-start overflow-hidden bg-surface md:w-auto"
+            >
+              <span data-shot={i === 0 ? "" : undefined} className="block">
+                <TintedImage
+                  src={p.img}
+                  mask={p.mask}
+                  color={color}
+                  objectPosition={pos}
+                  alt={i === 0 ? `${p.name} in ${colorName(color)}` : `${p.name}, detail`}
+                  className={`block aspect-[4/5] w-full object-cover ${i === 0 ? "" : "scale-150"}`}
+                />
+              </span>
+            </div>
+          ))}
+        </div>
+        {/* The 3D slide turns on sideways drags, so give every slide a direct button */}
+        <div
+          className="mt-4 flex items-center justify-center gap-2 md:hidden"
+          role="tablist"
+          aria-label="Gallery"
+        >
+          {slides.map((label, i) => (
+            <button
+              key={label}
+              role="tab"
+              aria-selected={slide === i}
+              aria-pressed={slide === i}
+              onClick={() => goTo(i)}
+              className="chip"
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Buy box */}

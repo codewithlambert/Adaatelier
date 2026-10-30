@@ -3,6 +3,7 @@ import { useRef } from "react";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Words } from "@/components/site/Words";
 import { useReveal } from "@/hooks/use-reveal";
+import { absoluteUrl } from "@/lib/site";
 import { findPost, posts } from "@/lib/catalog";
 
 export const Route = createFileRoute("/journal/$slug")({
@@ -17,7 +18,8 @@ export const Route = createFileRoute("/journal/$slug")({
           { title: `${loaderData.title} — Ada Atelier Journal` },
           { name: "description", content: loaderData.excerpt },
           { property: "og:title", content: loaderData.title },
-          { property: "og:image", content: loaderData.img },
+          { property: "og:image", content: absoluteUrl(loaderData.img) },
+          { name: "twitter:image", content: absoluteUrl(loaderData.img) },
         ]
       : [{ title: "Journal — Ada Atelier" }],
   }),

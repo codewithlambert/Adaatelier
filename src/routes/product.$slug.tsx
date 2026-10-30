@@ -4,6 +4,7 @@ import { ProductCard } from "@/components/site/ProductCard";
 import { ProductDetails } from "@/components/site/ProductDetails";
 import { Words } from "@/components/site/Words";
 import { useReveal } from "@/hooks/use-reveal";
+import { absoluteUrl } from "@/lib/site";
 import { bagColors, findProduct, products, type ColorId } from "@/lib/catalog";
 
 type ProductSearch = { color?: ColorId };
@@ -22,7 +23,8 @@ export const Route = createFileRoute("/product/$slug")({
           { title: `${loaderData.name} — Ada Atelier` },
           { name: "description", content: loaderData.description },
           { property: "og:title", content: `${loaderData.name} — Ada Atelier` },
-          { property: "og:image", content: loaderData.img },
+          { property: "og:image", content: absoluteUrl(loaderData.img) },
+          { name: "twitter:image", content: absoluteUrl(loaderData.img) },
         ]
       : [{ title: "Product — Ada Atelier" }],
   }),
