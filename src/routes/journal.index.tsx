@@ -9,8 +9,8 @@ import { posts } from "@/lib/catalog";
 export const Route = createFileRoute("/journal/")({
   head: () => ({
     meta: [
-      { title: "Journal — LUVBAG" },
-      { name: "description", content: "Guides, edits and offers from the LUVBAG studio." },
+      { title: "Journal — Ada Atelier" },
+      { name: "description", content: "Guides, edits and offers from the Ada Atelier studio." },
     ],
   }),
   component: Journal,

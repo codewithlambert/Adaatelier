@@ -7,8 +7,8 @@ import { useReveal } from "@/hooks/use-reveal";
 export const Route = createFileRoute("/contact")({
   head: () => ({
     meta: [
-      { title: "Contact — LUVBAG" },
-      { name: "description", content: "Get in touch with the LUVBAG studio." },
+      { title: "Contact — Ada Atelier" },
+      { name: "description", content: "Get in touch with the Ada Atelier studio." },
     ],
   }),
   component: Contact,

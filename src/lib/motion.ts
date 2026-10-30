@@ -3,7 +3,7 @@ import type { ScrollTrigger as ST } from "gsap/ScrollTrigger";
 
 declare global {
   interface Window {
-    __luvbagReady?: boolean;
+    __adaReady?: boolean;
   }
 }
 
@@ -26,17 +26,17 @@ export const prefersReducedMotion = () =>
 
 /** The preloader calls this when the curtain lifts; the home hero waits for it. */
 export function markIntroDone() {
-  window.__luvbagReady = true;
-  window.dispatchEvent(new Event("luvbag:ready"));
+  window.__adaReady = true;
+  window.dispatchEvent(new Event("ada:ready"));
 }
 
 export function whenIntroDone(cb: () => void) {
-  if (window.__luvbagReady) {
+  if (window.__adaReady) {
     cb();
     return () => {};
   }
-  window.addEventListener("luvbag:ready", cb, { once: true });
-  return () => window.removeEventListener("luvbag:ready", cb);
+  window.addEventListener("ada:ready", cb, { once: true });
+  return () => window.removeEventListener("ada:ready", cb);
 }
 
 /** Sends a copy of `source` (a product image) arcing into the visible bag button, then bumps the button. */

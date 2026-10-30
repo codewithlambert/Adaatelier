@@ -138,7 +138,7 @@ export function SurpriseBox() {
               <Face w={W} h={H} t={`translate3d(${-W / 2}px, ${-H}px, ${D / 2}px)`} bg={paper}>
                 <span className="flex flex-col items-center gap-2 text-[#141414]">
                   <LogoMark className="h-7 w-7" />
-                  <span className="headline text-xl tracking-[0.4em]">LUVBAG</span>
+                  <span className="headline text-lg tracking-[0.3em]">ADA ATELIER</span>
                 </span>
               </Face>
               <Face
@@ -207,7 +207,7 @@ export function SurpriseBox() {
                 >
                   <span className="flex flex-col items-center gap-2 text-[#141414]">
                     <LogoMark className="h-9 w-9" />
-                    <span className="headline text-lg tracking-[0.4em]">LUVBAG</span>
+                    <span className="headline text-base tracking-[0.3em]">ADA ATELIER</span>
                   </span>
                 </Face>
                 <Face

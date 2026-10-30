@@ -12,8 +12,11 @@ export const Route = createFileRoute("/shop")({
     categories.includes(search["cat"] as Category) ? { cat: search["cat"] as Category } : {},
   head: () => ({
     meta: [
-      { title: "Shop — LUVBAG" },
-      { name: "description", content: "Shop LUVBAG flap bags, shoppers, totes and backpacks." },
+      { title: "Shop — Ada Atelier" },
+      {
+        name: "description",
+        content: "Shop Ada Atelier flap bags, shoppers, totes and backpacks.",
+      },
     ],
   }),
   component: Shop,

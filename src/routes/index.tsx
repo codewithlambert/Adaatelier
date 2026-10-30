@@ -15,13 +15,13 @@ import box from "@/assets/box.jpg";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "LUVBAG — Be Stylish & Modish" },
+      { title: "Ada Atelier — Be Stylish & Modish" },
       {
         name: "description",
         content:
           "Premium, durable bags made with the best materials. Shop totes, flap bags and backpacks.",
       },
-      { property: "og:title", content: "LUVBAG — Be Stylish & Modish" },
+      { property: "og:title", content: "Ada Atelier — Be Stylish & Modish" },
       {
         property: "og:description",
         content: "Premium, durable bags made with the best materials.",
@@ -91,9 +91,9 @@ function Index() {
         <div
           data-hero-wordmark
           aria-hidden
-          className="headline pointer-events-none absolute inset-x-0 top-[15%] flex justify-center overflow-hidden text-[24vw] leading-[0.85] tracking-[0.04em] md:top-[11%] md:text-[17vw]"
+          className="headline pointer-events-none absolute inset-x-0 top-[15%] flex justify-center overflow-hidden text-[34vw] leading-[0.85] tracking-[0.06em] md:top-[13%] md:text-[22vw]"
         >
-          {"LUVBAG".split("").map((l, i) => (
+          {"ADA".split("").map((l, i) => (
             <span key={i} data-hero-letter className="inline-block">
               {l}
             </span>
@@ -210,7 +210,7 @@ function Index() {
           <div data-fade className="max-w-sm md:justify-self-end">
             <p className="text-sm leading-relaxed text-muted-foreground">
               We researched materials that can be used as packaging and are kind to the environment.
-              Every LUVBAG now ships in one.
+              Every Ada Atelier bag now ships in one.
             </p>
             <Link to="/about" hash="eco" className="link-line mt-5 inline-block text-[13px]">
               Our story
@@ -221,7 +221,7 @@ function Index() {
           <div data-img-reveal className="overflow-hidden bg-surface">
             <img
               src={box}
-              alt="LUVBAG eco packaging box"
+              alt="Ada Atelier eco packaging box"
               loading="lazy"
               width={1280}
               height={720}

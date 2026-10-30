@@ -4,15 +4,18 @@ import { InfoPage } from "@/components/site/InfoPage";
 export const Route = createFileRoute("/shipping")({
   head: () => ({
     meta: [
-      { title: "Shipping — LUVBAG" },
-      { name: "description", content: "Delivery times, costs and packaging for LUVBAG orders." },
+      { title: "Shipping — Ada Atelier" },
+      {
+        name: "description",
+        content: "Delivery times, costs and packaging for Ada Atelier orders.",
+      },
     ],
   }),
   component: () => (
     <InfoPage
       eyebrow="Help"
       lines={["_Shipping"]}
-      intro="Every order ships in our recyclable LUVBAG box."
+      intro="Every order ships in our recyclable Ada Atelier box."
       sections={[
         {
           title: "Processing",
@@ -36,7 +39,7 @@ export const Route = createFileRoute("/shipping")({
         {
           title: "Packaging",
           body: [
-            "Each bag is wrapped in plastic-free tissue and packed in a recyclable LUVBAG box. Keep it for storage or recycle it with household card.",
+            "Each bag is wrapped in plastic-free tissue and packed in a recyclable Ada Atelier box. Keep it for storage or recycle it with household card.",
           ],
         },
       ]}

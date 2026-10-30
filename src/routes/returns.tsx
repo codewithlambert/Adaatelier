@@ -4,8 +4,8 @@ import { InfoPage } from "@/components/site/InfoPage";
 export const Route = createFileRoute("/returns")({
   head: () => ({
     meta: [
-      { title: "Returns — LUVBAG" },
-      { name: "description", content: "How to return or exchange a LUVBAG order." },
+      { title: "Returns — Ada Atelier" },
+      { name: "description", content: "How to return or exchange a Ada Atelier order." },
     ],
   }),
   component: () => (

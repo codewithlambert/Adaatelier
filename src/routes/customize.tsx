@@ -6,7 +6,7 @@ import { useReveal } from "@/hooks/use-reveal";
 export const Route = createFileRoute("/customize")({
   head: () => ({
     meta: [
-      { title: "Customize — LUVBAG" },
+      { title: "Customize — Ada Atelier" },
       { name: "description", content: "Choose your bag type and colour, then add your monogram." },
     ],
   }),
@@ -14,8 +14,8 @@ export const Route = createFileRoute("/customize")({
 });
 
 const steps = [
-  ["01", "Choose a shape", "Seven silhouettes, from a slim clutch to an everyday shopper."],
-  ["02", "Pick a colour", "Onyx, Silver or Sand, finished with tonal hardware."],
+  ["01", "Choose a shape", "Five silhouettes, from a chain flap bag to an everyday backpack."],
+  ["02", "Pick a colour", "Six colourways, from Onyx to Cognac, tinted to order."],
   ["03", "Add your mark", "Up to three initials, set by hand on the front panel."],
 ];
 

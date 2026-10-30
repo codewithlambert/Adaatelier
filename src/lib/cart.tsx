@@ -34,7 +34,7 @@ type CartState = {
 };
 
 const CartContext = createContext<CartState | null>(null);
-const STORAGE_KEY = "luvbag-cart";
+const STORAGE_KEY = "ada-cart";
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [lines, setLines] = useState<CartLine[]>([]);

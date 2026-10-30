@@ -158,7 +158,7 @@ export function ProductDetails({ product: p, initialColor = "onyx", onColorChang
               Shipping & returns
             </AccordionTrigger>
             <AccordionContent className="text-sm text-muted-foreground">
-              Orders ship within 2 business days in our recyclable LUVBAG box. Returns are free
+              Orders ship within 2 business days in our recyclable Ada Atelier box. Returns are free
               within 30 days.{" "}
               <Link to="/shipping" className="link-line text-foreground">
                 Shipping

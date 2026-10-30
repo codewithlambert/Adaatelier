@@ -248,7 +248,7 @@ export function SiteLayout({ children }: { children: ReactNode }) {
           <LogoMark className="h-12 w-12" />
         </span>
         <div className="headline mt-6 flex overflow-hidden text-5xl tracking-[0.3em] sm:text-7xl">
-          {"LUVBAG".split("").map((l, i) => (
+          {"ADA".split("").map((l, i) => (
             <span key={i} data-pl-letter className="inline-block">
               {l}
             </span>
@@ -284,7 +284,7 @@ export function SiteLayout({ children }: { children: ReactNode }) {
             scrolled ? "" : "!shadow-[0_8px_24px_-14px_rgb(0_0_0/0.25)]"
           }`}
         >
-          <Link to="/" className="text-lg md:text-xl" aria-label="LUVBAG home">
+          <Link to="/" className="text-lg md:text-xl" aria-label="Ada Atelier home">
             <Logo />
           </Link>
           <nav className="hidden items-center gap-1 text-[13px] lg:flex">
@@ -431,7 +431,7 @@ function Footer() {
       <div
         className={`${wrap} mt-10 flex items-center justify-between border-t border-ink-foreground/15 py-6 text-[11px] text-ink-foreground/60`}
       >
-        <span>©2026 LUVBAG LTD. All rights reserved</span>
+        <span>©2026 Ada Atelier Ltd. All rights reserved</span>
         <div className="flex gap-2">
           {[
             { I: Facebook, label: "Facebook" },
@@ -475,7 +475,7 @@ function SearchSheet({
         className="border-0 bg-background/85 px-5 pb-10 pt-16 backdrop-blur-2xl sm:px-12"
       >
         <SheetTitle className="sr-only">Search</SheetTitle>
-        <SheetDescription className="sr-only">Search the LUVBAG collection</SheetDescription>
+        <SheetDescription className="sr-only">Search the Ada Atelier collection</SheetDescription>
         <div className="mx-auto max-w-3xl">
           <input
             autoFocus

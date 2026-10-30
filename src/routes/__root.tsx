@@ -77,10 +77,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "LUVBAG — Stylish bags" },
+      { title: "Ada Atelier — Stylish bags" },
       { name: "description", content: "Premium handbags, totes and backpacks." },
-      { name: "author", content: "LUVBAG" },
-      { property: "og:title", content: "LUVBAG — Stylish bags" },
+      { name: "author", content: "Ada Atelier" },
+      { property: "og:title", content: "Ada Atelier — Stylish bags" },
       { property: "og:description", content: "Premium handbags, totes and backpacks." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

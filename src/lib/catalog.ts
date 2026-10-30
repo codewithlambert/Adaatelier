@@ -230,7 +230,7 @@ export const posts: Post[] = [
     img: hero,
     body: [
       "Selected totes and shoppers are reduced this week while stock lasts.",
-      "Every order still ships in our recyclable LUVBAG box, and returns stay free for 30 days.",
+      "Every order still ships in our recyclable Ada Atelier box, and returns stay free for 30 days.",
     ],
   },
 ];

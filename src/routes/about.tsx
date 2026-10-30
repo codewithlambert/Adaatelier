@@ -11,10 +11,11 @@ import box from "@/assets/box.jpg";
 export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
-      { title: "Our story — LUVBAG" },
+      { title: "Our story — Ada Atelier" },
       {
         name: "description",
-        content: "Why LUVBAG makes premium, durable bags and ships them in eco-friendly packaging.",
+        content:
+          "Why Ada Atelier makes premium, durable bags and ships them in eco-friendly packaging.",
       },
     ],
   }),
@@ -38,14 +39,14 @@ function About() {
       <PageHeader
         eyebrow="Our story"
         lines={["Be stylish", "& _modish"]}
-        intro="LUVBAG started with one idea: a bag should look as good in five years as it does on the first day."
+        intro="Ada Atelier started with one idea: a bag should look as good in five years as it does on the first day."
       />
 
       <div className={wrap}>
         <div data-parallax className="overflow-hidden bg-surface">
           <img
             src={hero}
-            alt="LUVBAG tote"
+            alt="Ada Atelier tote"
             className="aspect-[4/5] w-full scale-110 object-cover md:aspect-[21/9]"
           />
         </div>
@@ -60,8 +61,8 @@ function About() {
           className="space-y-5 text-sm leading-relaxed text-muted-foreground md:max-w-md"
         >
           <p>
-            We always give the best for the products we produce. Every LUVBAG is cut from premium
-            materials chosen to last a long time and survive the knocks of everyday life.
+            We always give the best for the products we produce. Every Ada Atelier bag is cut from
+            premium materials chosen to last a long time and survive the knocks of everyday life.
           </p>
           <p>
             Our shapes are simple on purpose. Clean lines, tonal hardware and quiet branding mean
@@ -79,7 +80,7 @@ function About() {
           <div data-img-reveal className="overflow-hidden">
             <img
               src={box}
-              alt="LUVBAG eco packaging box"
+              alt="Ada Atelier eco packaging box"
               className="aspect-square w-full object-cover"
             />
           </div>
@@ -92,8 +93,8 @@ function About() {
             </h2>
             <p data-fade className="mt-8 max-w-md text-sm leading-relaxed text-muted-foreground">
               We researched materials that can be used as packaging and are kind to the environment.
-              Every order now ships in a recyclable LUVBAG box with plastic-free tissue, ready to be
-              reused or recycled.
+              Every order now ships in a recyclable Ada Atelier box with plastic-free tissue, ready
+              to be reused or recycled.
             </p>
           </div>
         </div>

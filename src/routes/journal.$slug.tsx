@@ -14,12 +14,12 @@ export const Route = createFileRoute("/journal/$slug")({
   head: ({ loaderData }) => ({
     meta: loaderData
       ? [
-          { title: `${loaderData.title} — LUVBAG Journal` },
+          { title: `${loaderData.title} — Ada Atelier Journal` },
           { name: "description", content: loaderData.excerpt },
           { property: "og:title", content: loaderData.title },
           { property: "og:image", content: loaderData.img },
         ]
-      : [{ title: "Journal — LUVBAG" }],
+      : [{ title: "Journal — Ada Atelier" }],
   }),
   component: PostPage,
 });

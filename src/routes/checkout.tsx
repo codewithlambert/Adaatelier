@@ -8,7 +8,7 @@ import { money } from "@/lib/catalog";
 import { useCart, type CartLine } from "@/lib/cart";
 
 export const Route = createFileRoute("/checkout")({
-  head: () => ({ meta: [{ title: "Checkout — LUVBAG" }] }),
+  head: () => ({ meta: [{ title: "Checkout — Ada Atelier" }] }),
   component: Checkout,
 });
 
