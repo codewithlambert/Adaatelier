@@ -101,21 +101,6 @@ export function BagViewer3D({ model, color, label, monogram, className = "" }: P
   };
 
   const w = Math.round(h * model.aspect);
-  const depth = (model.depth * h) / 420;
-  const step = depth / (LAYERS - 1);
-  const hex = bagColors.find((c) => c.id === color)?.hex ?? "#151515";
-  const plane = (z: number, extra = ""): CSSProperties => ({
-    width: w,
-    height: h,
-    transform: `translate3d(${-w / 2}px, ${-h / 2}px, ${z}px)${extra}`,
-  });
-  const silhouette: CSSProperties = {
-    background: shade(hex, color === "onyx" ? 0.6 : 0.42),
-    maskImage: `url(${model.src})`,
-    WebkitMaskImage: `url(${model.src})`,
-    maskSize: "100% 100%",
-    WebkitMaskSize: "100% 100%",
-  };
 
   return (
     <div
@@ -138,50 +123,7 @@ export function BagViewer3D({ model, color, label, monogram, className = "" }: P
       />
       <div className="absolute left-1/2 top-1/2 h-px w-px">
         <div ref={spin} className="preserve-3d absolute left-0 top-0">
-          {/* back */}
-          <div
-            className="face"
-            style={{ ...plane(-depth / 2, " rotateY(180deg)"), filter: "brightness(0.7)" }}
-          >
-            <TintedImage
-              src={model.src}
-              mask={model.mask}
-              color={color}
-              alt=""
-              className="absolute inset-0 h-full w-full max-w-none"
-            />
-          </div>
-          {/* side walls */}
-          {Array.from({ length: LAYERS - 2 }, (_, i) => (
-            <div
-              key={i}
-              className="face"
-              style={{ ...plane(-depth / 2 + step * (i + 1)), ...silhouette }}
-            />
-          ))}
-          {/* front */}
-          <div className="face" style={plane(depth / 2)}>
-            <TintedImage
-              src={model.src}
-              mask={model.mask}
-              color={color}
-              alt=""
-              className="absolute inset-0 h-full w-full max-w-none"
-            />
-            {monogram && (
-              <span
-                key={monogram}
-                className="headline pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 tracking-[0.14em] text-white/85 animate-in fade-in zoom-in-95 duration-500 [text-shadow:0_1px_1px_rgb(0_0_0/0.35)]"
-                style={{
-                  left: `${model.monogram[0] * 100}%`,
-                  top: `${model.monogram[1] * 100}%`,
-                  fontSize: h * 0.075,
-                }}
-              >
-                {monogram}
-              </span>
-            )}
-          </div>
+          <ExtrudedBag model={model} color={color} h={h} monogram={monogram} />
         </div>
       </div>
 
@@ -191,5 +133,85 @@ export function BagViewer3D({ model, color, label, monogram, className = "" }: P
         <Rotate3d className="h-3.5 w-3.5" strokeWidth={1.6} /> Drag to rotate
       </span>
     </div>
+  );
+}
+
+type ExtrudedBagProps = {
+  model: BagModel;
+  color: ColorId;
+  /** rendered height in px */
+  h: number;
+  monogram?: string | undefined;
+  /** where the 3D origin sits on the bag: its centre (viewer) or the middle of its base (box) */
+  anchor?: "center" | "bottom";
+};
+
+/**
+ * The bag as stacked planes: tinted photo front and back, solid silhouettes in a darker shade
+ * between them. Render inside a `preserve-3d` parent.
+ */
+export function ExtrudedBag({ model, color, h, monogram, anchor = "center" }: ExtrudedBagProps) {
+  const w = Math.round(h * model.aspect);
+  const depth = (model.depth * h) / 420;
+  const step = depth / (LAYERS - 1);
+  const top = anchor === "center" ? -h / 2 : -h;
+  const hex = bagColors.find((c) => c.id === color)?.hex ?? "#151515";
+  const plane = (z: number, extra = ""): CSSProperties => ({
+    width: w,
+    height: h,
+    transform: `translate3d(${-w / 2}px, ${top}px, ${z}px)${extra}`,
+  });
+  const silhouette: CSSProperties = {
+    background: shade(hex, color === "onyx" ? 0.6 : 0.42),
+    maskImage: `url(${model.src})`,
+    WebkitMaskImage: `url(${model.src})`,
+    maskSize: "100% 100%",
+    WebkitMaskSize: "100% 100%",
+  };
+  const photo = (
+    <TintedImage
+      src={model.src}
+      mask={model.mask}
+      color={color}
+      alt=""
+      className="absolute inset-0 h-full w-full max-w-none"
+    />
+  );
+
+  return (
+    <>
+      {/* back */}
+      <div
+        className="face"
+        style={{ ...plane(-depth / 2, " rotateY(180deg)"), filter: "brightness(0.7)" }}
+      >
+        {photo}
+      </div>
+      {/* side walls */}
+      {Array.from({ length: LAYERS - 2 }, (_, i) => (
+        <div
+          key={i}
+          className="face"
+          style={{ ...plane(-depth / 2 + step * (i + 1)), ...silhouette }}
+        />
+      ))}
+      {/* front */}
+      <div className="face" style={plane(depth / 2)}>
+        {photo}
+        {monogram && (
+          <span
+            key={monogram}
+            className="headline pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 tracking-[0.14em] text-white/85 animate-in fade-in zoom-in-95 duration-500 [text-shadow:0_1px_1px_rgb(0_0_0/0.35)]"
+            style={{
+              left: `${model.monogram[0] * 100}%`,
+              top: `${model.monogram[1] * 100}%`,
+              fontSize: h * 0.075,
+            }}
+          >
+            {monogram}
+          </span>
+        )}
+      </div>
+    </>
   );
 }

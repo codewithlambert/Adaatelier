@@ -1,8 +1,11 @@
 import { Link } from "@tanstack/react-router";
-import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
-import cutout from "@/assets/bag3-cutout.png";
+import { Shuffle } from "lucide-react";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { ExtrudedBag } from "@/components/site/BagViewer3D";
 import { LogoMark } from "@/components/site/Logo";
-import { loadGsap, prefersReducedMotion } from "@/lib/motion";
+import { bagColors, colorName, money, products, type ColorId } from "@/lib/catalog";
+import { useCart } from "@/lib/cart";
+import { flyToBag, loadGsap, prefersReducedMotion } from "@/lib/motion";
 
 // Box, lid and bag dimensions in px (the whole stage is scaled down on small screens)
 const W = 300;
@@ -12,9 +15,7 @@ const LW = W + 12;
 const LD = D + 12;
 const LH = 36;
 const LIFT = 6;
-const BW = 190;
-const BH = Math.round((BW * 756) / 448); // cutout aspect ratio
-const LAYERS = 9;
+const BAG_H = 300;
 
 const paper = "linear-gradient(180deg, #fbfbfb, #ededed)";
 const edge = "inset 0 0 0 1px rgb(0 0 0 / 0.05)";
@@ -49,6 +50,53 @@ function Face({
 /** Pinned scroll scene: a CSS 3D box turns, its lid swings open and an extruded bag rises out and spins. */
 export function SurpriseBox() {
   const section = useRef<HTMLElement>(null);
+  const bagSpin = useRef<HTMLDivElement>(null);
+  const { add } = useCart();
+  // Fixed first pick so server and client HTML match; the real draw happens after mount.
+  const [pick, setPick] = useState<{ i: number; color: ColorId }>({ i: 2, color: "onyx" });
+  const p = products[pick.i] ?? products[0]!;
+
+  const draw = (avoid?: { i: number; color: ColorId }) => {
+    let next: { i: number; color: ColorId };
+    do {
+      next = {
+        i: Math.floor(Math.random() * products.length),
+        color: bagColors[Math.floor(Math.random() * bagColors.length)]!.id,
+      };
+    } while (avoid && next.i === avoid.i && next.color === avoid.color);
+    return next;
+  };
+
+  useEffect(() => setPick(draw()), []);
+
+  const unboxAnother = () => {
+    setPick((cur) => draw(cur));
+    if (prefersReducedMotion()) return;
+    void loadGsap().then(({ gsap }) =>
+      gsap.fromTo(
+        bagSpin.current,
+        { rotationY: -200, scale: 0.75 },
+        { rotationY: 0, scale: 1, duration: 1.1, ease: "expo.out" },
+      ),
+    );
+  };
+
+  const addToBag = () => {
+    add(
+      {
+        id: `${p.slug}-${pick.color}`,
+        name: p.name,
+        price: p.price,
+        img: p.img,
+        mask: p.mask,
+        color: pick.color,
+        note: `${p.cat} · ${colorName(pick.color)}`,
+      },
+      1,
+      false,
+    );
+    void flyToBag(section.current?.querySelector("[data-sb-bag] img"));
+  };
 
   useEffect(() => {
     let ctx: { revert: () => void } | undefined;
@@ -62,7 +110,7 @@ export function SurpriseBox() {
           // static end state: open box with the bag standing beside it
           gsap.set("[data-sb-lid]", { rotationX: 118 });
           gsap.set("[data-sb-bag]", { y: -(H + 40) });
-          gsap.set("[data-sb-caption]", { opacity: 1 });
+          gsap.set("[data-sb-caption]", { autoAlpha: 1 });
           return;
         }
         gsap.set("[data-sb-bag]", { y: -6, scale: 0.4, opacity: 0 });
@@ -84,7 +132,7 @@ export function SurpriseBox() {
           .to("[data-sb-bag]", { y: -(H + 40), scale: 1, duration: 1.2, ease: "power3.out" }, 1.2)
           .to("[data-sb-title]", { y: -40, opacity: 0, duration: 0.5 }, 1.3)
           .to("[data-sb-bag]", { rotationY: 360, duration: 1.4, ease: "power1.inOut" }, 2.2)
-          .to("[data-sb-caption]", { opacity: 1, y: -10, duration: 0.5 }, 3);
+          .to("[data-sb-caption]", { autoAlpha: 1, y: -10, duration: 0.5 }, 3);
       }, section);
     });
     return () => {
@@ -242,50 +290,53 @@ export function SurpriseBox() {
                 />
               </div>
 
-              {/* bag: the cutout stacked in depth so it has real thickness as it turns */}
+              {/* bag: a random pick, stacked in depth so it has real thickness as it turns */}
               <div data-sb-bag className="preserve-3d absolute left-0 top-0">
-                {Array.from({ length: LAYERS }, (_, i) => {
-                  const front = i === LAYERS - 1;
-                  return (
-                    <img
-                      key={i}
-                      src={cutout}
-                      alt={front ? "Flap Bag No. 003 rising out of the box" : ""}
-                      aria-hidden={!front}
-                      className="face max-w-none"
-                      style={{
-                        width: BW,
-                        height: BH,
-                        transform: `translate3d(${-BW / 2}px, ${-BH}px, ${(i - (LAYERS - 1) / 2) * 1.6}px)${i === 0 ? " rotateY(180deg)" : ""}`,
-                        filter: front
-                          ? undefined
-                          : i === 0
-                            ? "brightness(0.6)"
-                            : "brightness(0.22)",
-                      }}
-                    />
-                  );
-                })}
+                <div ref={bagSpin} className="preserve-3d absolute left-0 top-0">
+                  <ExtrudedBag
+                    key={`${p.slug}-${pick.color}`}
+                    model={p.model}
+                    color={pick.color}
+                    h={BAG_H}
+                    anchor="bottom"
+                  />
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <p
+      <div
         data-sb-caption
-        className="absolute inset-x-0 bottom-28 text-center text-sm opacity-0 md:bottom-12"
+        aria-live="polite"
+        className="invisible absolute inset-x-0 bottom-28 z-30 flex flex-col items-center gap-4 px-5 text-center opacity-0 md:bottom-10"
       >
-        <span className="headline text-2xl">Flap Bag No. 003</span>
-        <span className="ml-3 text-muted-foreground">$34.99</span>
-        <Link
-          to="/product/$slug"
-          params={{ slug: "flap-bag-003" }}
-          className="link-line ml-4 text-[13px]"
-        >
-          Shop now
-        </Link>
-      </p>
+        <div>
+          <p className="eyebrow">You unboxed</p>
+          <p className="mt-2">
+            <Link
+              to="/product/$slug"
+              params={{ slug: p.slug }}
+              search={pick.color === "onyx" ? {} : { color: pick.color }}
+              className="headline link-line text-3xl md:text-4xl"
+            >
+              {p.name}
+            </Link>
+          </p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {colorName(pick.color)} · <span className="tabular-nums">{money(p.price)}</span>
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <button data-magnetic onClick={addToBag} className="btn">
+            Add to bag
+          </button>
+          <button onClick={unboxAnother} className="btn btn-outline">
+            <Shuffle className="h-3.5 w-3.5" /> Unbox another
+          </button>
+        </div>
+      </div>
     </section>
   );
 }
