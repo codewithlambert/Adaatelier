@@ -74,7 +74,9 @@ Deno.serve(async (req) => {
     if (event.type !== "collection.succeeded" || event.data?.status !== "SUCCEEDED")
       return new Response("ignored");
     provider = "Bachs";
-    orderId = event.data?.metadata?.order_id ?? event.metadata?.order_id;
+    // Bachs has sent the order id as both `metadata` and `meta`
+    orderId =
+      event.data?.metadata?.order_id ?? event.data?.meta?.order_id ?? event.metadata?.order_id;
     ref = event.data?.checkout_id;
     amount = Number(event.data?.amount);
     currency = String(event.data?.currency).toUpperCase();
@@ -97,8 +99,9 @@ Deno.serve(async (req) => {
     order.charge_currency && order.charge_amount !== null
       ? { currency: String(order.charge_currency), amount: Number(order.charge_amount) }
       : { currency: "USD", amount: Number(order.total) };
+  // paying more is fine (bank-transfer fees are added on top); only a short payment is flagged
   const tolerance = expected.currency === "USD" ? 0.01 : 1;
-  if (currency === expected.currency && Math.abs(amount - expected.amount) > tolerance) {
+  if (currency === expected.currency && amount < expected.amount - tolerance) {
     await db.from("notifications").insert({
       kind: "system",
       title: `Payment mismatch on ${order.id}`,

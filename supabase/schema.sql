@@ -416,6 +416,8 @@ language sql stable security definer set search_path = '' as $$
     'total', o.total,
     'currency', o.currency,
     'paid_amount', o.paid_amount,
+    'charge_currency', o.charge_currency,
+    'charge_amount', o.charge_amount,
     'city', o.city,
     'name', c.name,
     'status_note', o.status_note,

@@ -48,6 +48,9 @@ type Tracked = {
   /** what arrived and in which currency (naira for Bachs) */
   currency: string | null;
   paid_amount: number | null;
+  /** what the payment page asked for: naira for Bachs */
+  charge_currency: string | null;
+  charge_amount: number | null;
   city: string | null;
   name: string;
   /** written by the store in the admin */
@@ -143,6 +146,16 @@ function TrackPage() {
     );
 
   const confirming = !order.paid_at && order.status === "pending";
+  // a naira order reads in naira throughout, at the rate it was charged
+  const local =
+    order.charge_currency && order.charge_currency !== "USD" && Number(order.charge_amount) > 0
+      ? { currency: order.charge_currency, rate: Number(order.charge_amount) / Number(order.total) }
+      : null;
+  const show = (n: number) => (local ? formatIn(Number(n), local.currency, local.rate) : usd(n));
+  const paidExtra =
+    order.paid_amount !== null && order.currency && local && order.currency === local.currency
+      ? Number(order.paid_amount) - Number(order.charge_amount)
+      : 0;
   const steps = [
     { label: "Order placed", at: order.created_at, done: true },
     {
@@ -153,7 +166,7 @@ function TrackPage() {
         ? `${
             order.paid_amount !== null && order.currency
               ? formatIn(Number(order.paid_amount), order.currency, 1)
-              : usd(order.total)
+              : show(order.total)
           } paid with ${order.payment_method}`
         : undefined,
     },
@@ -282,7 +295,7 @@ function TrackPage() {
                           {it.monogram ? ` · Monogram ${it.monogram}` : ""}
                         </p>
                       </div>
-                      <span className="tabular-nums">{usd(it.unit_price * it.qty)}</span>
+                      <span className="tabular-nums">{show(it.unit_price * it.qty)}</span>
                     </div>
                   </li>
                 );
@@ -291,32 +304,36 @@ function TrackPage() {
             <dl className="mt-2 space-y-2 border-t border-foreground/10 pt-4 text-sm">
               <div className="flex justify-between">
                 <dt className="text-muted-foreground">Subtotal</dt>
-                <dd className="tabular-nums">{usd(order.subtotal)}</dd>
+                <dd className="tabular-nums">{show(order.subtotal)}</dd>
               </div>
               {Number(order.discount) > 0 && (
                 <div className="flex justify-between">
                   <dt className="text-muted-foreground">Discount</dt>
-                  <dd className="tabular-nums">−{usd(order.discount)}</dd>
+                  <dd className="tabular-nums">−{show(order.discount)}</dd>
                 </div>
               )}
               <div className="flex justify-between">
                 <dt className="text-muted-foreground">Shipping</dt>
                 <dd className="tabular-nums">
-                  {Number(order.shipping) ? usd(order.shipping) : "Free"}
+                  {Number(order.shipping) ? show(order.shipping) : "Free"}
                 </dd>
               </div>
               <div className="flex justify-between border-t border-foreground/10 pt-3 text-base">
                 <dt>Total</dt>
-                <dd className="tabular-nums">{usd(order.total)}</dd>
+                <dd className="tabular-nums">{show(order.total)}</dd>
               </div>
-              {order.paid_amount !== null && order.currency && order.currency !== "USD" && (
-                <div className="flex justify-between text-sm">
-                  <dt className="text-muted-foreground">Paid</dt>
-                  <dd className="tabular-nums">
-                    {formatIn(Number(order.paid_amount), order.currency, 1)}
-                  </dd>
+              {paidExtra > 0 && (
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <dt>Transfer fee</dt>
+                  <dd className="tabular-nums">{formatIn(paidExtra, local!.currency, 1)}</dd>
                 </div>
               )}
+              {local ? (
+                <p className="pt-1 text-right text-[11px] text-muted-foreground">
+                  {usd(order.total)} at {formatIn(1, "USD", 1)} ={" "}
+                  {formatIn(local.rate, local.currency, 1)}
+                </p>
+              ) : null}
             </dl>
             {order.city && (
               <p className="mt-6 text-xs text-muted-foreground">Delivering to {order.city}</p>
