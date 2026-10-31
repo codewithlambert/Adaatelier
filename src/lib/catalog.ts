@@ -98,7 +98,7 @@ export const products: Product[] = [
   {
     slug: "flap-bag-001",
     name: "Flap Bag No. 001",
-    price: 30.99,
+    price: 245,
     cat: "Flap Bag",
     img: bag1,
     mask: bag1Mask,
@@ -124,7 +124,7 @@ export const products: Product[] = [
   {
     slug: "shopper-002",
     name: "Shopper No. 002",
-    price: 24.99,
+    price: 145,
     cat: "Shopper",
     img: bag2,
     mask: bag2Mask,
@@ -150,7 +150,7 @@ export const products: Product[] = [
   {
     slug: "flap-bag-003",
     name: "Flap Bag No. 003",
-    price: 34.99,
+    price: 295,
     cat: "Flap Bag",
     img: bag3,
     mask: bag3Mask,
@@ -175,7 +175,7 @@ export const products: Product[] = [
   {
     slug: "tote-004",
     name: "Tote No. 004",
-    price: 39.99,
+    price: 345,
     cat: "Tote",
     img: hero,
     mask: heroMask,
@@ -201,7 +201,7 @@ export const products: Product[] = [
   {
     slug: "backpack-005",
     name: "Backpack No. 005",
-    price: 49.99,
+    price: 265,
     cat: "Backpack",
     img: blog1,
     mask: blog1Mask,
@@ -226,7 +226,7 @@ export const products: Product[] = [
   {
     slug: "ankara-shopper-006",
     name: "Ankara Shopper No. 006",
-    price: 64,
+    price: 165,
     cat: "Ankara",
     img: ankaraShopper,
     model: {
@@ -252,7 +252,7 @@ export const products: Product[] = [
   {
     slug: "ankara-tote-007",
     name: "Ankara Tote No. 007",
-    price: 89,
+    price: 325,
     cat: "Ankara",
     img: ankaraTote,
     model: {
@@ -279,7 +279,7 @@ export const products: Product[] = [
   {
     slug: "ankara-saddle-008",
     name: "Ankara Saddle No. 008",
-    price: 79,
+    price: 285,
     cat: "Ankara",
     img: ankaraSaddle,
     model: {
@@ -304,7 +304,7 @@ export const products: Product[] = [
   {
     slug: "mudcloth-backpack-009",
     name: "Mud Cloth Backpack No. 009",
-    price: 98,
+    price: 310,
     cat: "African Craft",
     img: mudclothBackpack,
     model: {

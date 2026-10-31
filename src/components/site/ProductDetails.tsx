@@ -11,6 +11,7 @@ import { BagViewer3D } from "@/components/site/BagViewer3D";
 import { ColorSwatches } from "@/components/site/ColorSwatches";
 import { TintedImage } from "@/components/site/Tint";
 import { Words } from "@/components/site/Words";
+import { RatingSummary } from "@/components/site/Reviews";
 import { colorName, money, type ColorId, type Product } from "@/lib/catalog";
 import { useCart } from "@/lib/cart";
 import { useLiveProduct } from "@/lib/live";
@@ -157,6 +158,7 @@ export function ProductDetails({ product: base, initialColor = "onyx", onColorCh
         <p data-fade className="mt-4 text-xl tabular-nums">
           {money(p.price)}
         </p>
+        <RatingSummary productId={p.slug} />
         <p data-fade className="mt-6 max-w-md text-sm leading-relaxed text-muted-foreground">
           {p.description}
         </p>

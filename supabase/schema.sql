@@ -103,6 +103,9 @@ create table if not exists public.orders (
   created_at      timestamptz not null default now(),
   updated_at      timestamptz not null default now()
 );
+-- payments (Stripe for cards worldwide, Bachs for naira); set by the payment webhook only
+alter table public.orders add column if not exists paid_at timestamptz;
+alter table public.orders add column if not exists currency text not null default 'USD';
 create index if not exists orders_created_idx on public.orders (created_at desc);
 create index if not exists orders_status_idx on public.orders (status);
 drop trigger if exists orders_touch on public.orders;
@@ -182,6 +185,46 @@ create table if not exists public.notifications (
   created_at  timestamptz not null default now()
 );
 create index if not exists notifications_created_idx on public.notifications (created_at desc);
+
+-- ---------------------------------------------------------------------
+-- 6b. Reviews (shoppers write, staff approve) and newsletter sign-ups
+-- ---------------------------------------------------------------------
+create table if not exists public.reviews (
+  id          bigint generated always as identity primary key,
+  product_id  text not null references public.products (id) on delete cascade,
+  name        text not null check (char_length(name) between 1 and 60),
+  rating      smallint not null check (rating between 1 and 5),
+  body        text not null check (char_length(body) between 1 and 1000),
+  status      text not null default 'pending' check (status in ('pending', 'published', 'hidden')),
+  created_at  timestamptz not null default now()
+);
+create index if not exists reviews_product_idx on public.reviews (product_id, created_at desc);
+
+create table if not exists public.subscribers (
+  email       text primary key check (email ~* '^[^@\s]+@[^@\s]+\.[^@\s]+$'),
+  source      text not null default 'footer',
+  created_at  timestamptz not null default now()
+);
+
+-- tell the admin about new reviews waiting for approval
+create or replace function public.notify_review() returns trigger
+language plpgsql security definer set search_path = '' as $$
+begin
+  insert into public.notifications (kind, title, body, link)
+  values ('system', 'New ' || new.rating || '-star review to approve',
+          new.name || ' on ' || new.product_id, '/#/products');
+  return new;
+end $$;
+drop trigger if exists reviews_notify on public.reviews;
+create trigger reviews_notify after insert on public.reviews
+  for each row execute function public.notify_review();
+
+-- bundled bags the admin has archived or drafted (the shop can't read those rows directly)
+create or replace function public.hidden_product_ids() returns setof text
+language sql stable security definer set search_path = '' as $$
+  select id from public.products where status <> 'active'
+$$;
+grant execute on function public.hidden_product_ids() to anon, authenticated;
 
 -- low stock: notify once when a product drops under 5
 create or replace function public.notify_low_stock() returns trigger
@@ -340,6 +383,33 @@ alter table public.discounts      enable row level security;
 alter table public.campaigns      enable row level security;
 alter table public.store_settings enable row level security;
 alter table public.notifications  enable row level security;
+alter table public.reviews        enable row level security;
+alter table public.subscribers    enable row level security;
+
+-- reviews: anyone reads published ones and can submit one for approval; staff moderate
+drop policy if exists "public reads published reviews" on public.reviews;
+create policy "public reads published reviews" on public.reviews for select to anon, authenticated
+  using (status = 'published' or public.is_staff());
+drop policy if exists "anyone submits a review" on public.reviews;
+create policy "anyone submits a review" on public.reviews for insert to anon, authenticated
+  with check (status = 'pending');
+drop policy if exists "staff moderate reviews" on public.reviews;
+create policy "staff moderate reviews" on public.reviews for update to authenticated
+  using (public.is_staff()) with check (public.is_staff());
+drop policy if exists "staff delete reviews" on public.reviews;
+create policy "staff delete reviews" on public.reviews for delete to authenticated
+  using (public.is_staff());
+
+-- newsletter: anyone can sign up; only staff can see the list
+drop policy if exists "anyone subscribes" on public.subscribers;
+create policy "anyone subscribes" on public.subscribers for insert to anon, authenticated
+  with check (true);
+drop policy if exists "staff read subscribers" on public.subscribers;
+create policy "staff read subscribers" on public.subscribers for select to authenticated
+  using (public.is_staff());
+drop policy if exists "staff remove subscribers" on public.subscribers;
+create policy "staff remove subscribers" on public.subscribers for delete to authenticated
+  using (public.is_staff());
 
 -- staff: everyone on the team can see the team; only owners change it
 drop policy if exists "staff can read team" on public.staff;
@@ -442,34 +512,53 @@ create policy "staff delete product images" on storage.objects for delete to aut
 insert into public.store_settings (id) values (1) on conflict (id) do nothing;
 
 insert into public.products (id, name, category, price, stock, sold, status, tagline, description, details, colors, focus, is_new, sort_order) values
-  ('flap-bag-001', 'Flap Bag No. 001', 'Flap Bag', 30.99, 42, 188, 'active', 'Silver flap, onyx body, chain strap.',
+  ('flap-bag-001', 'Flap Bag No. 001', 'Flap Bag', 245, 42, 188, 'active', 'Silver flap, onyx body, chain strap.',
    'A compact evening bag with a metallic flap and a polished push-lock. The chain strap drops to the hip or doubles up for the shoulder.',
    '{"Metallic coated leather flap","Smooth onyx body","Detachable chain strap","W 22 × H 15 × D 7 cm"}', '{onyx,silver,bordeaux}', null, true, 1),
-  ('shopper-002', 'Shopper No. 002', 'Shopper', 24.99, 8, 162, 'active', 'Heavy canvas for every day.',
+  ('shopper-002', 'Shopper No. 002', 'Shopper', 145, 8, 162, 'active', 'Heavy canvas for every day.',
    'Our everyday canvas shopper, cut from a dense cotton weave that keeps its shape when full and folds flat when empty.',
    '{"Heavyweight cotton canvas","Reinforced X-stitched handles","Fits a 14-inch laptop","W 38 × H 42 cm"}', '{onyx,sand,forest}', null, true, 2),
-  ('flap-bag-003', 'Flap Bag No. 003', 'Flap Bag', 34.99, 27, 271, 'active', 'The one from the Surprise Box.',
+  ('flap-bag-003', 'Flap Bag No. 003', 'Flap Bag', 295, 27, 271, 'active', 'The one from the Surprise Box.',
    'A rounded saddle-flap in smooth leather with a brushed-gold push-lock and an adjustable tan strap. Our signature piece.',
    '{"Smooth calf-grain leather","Brushed-gold hardware","Adjustable tan strap","W 26 × H 18 × D 8 cm"}', '{onyx,cognac,bordeaux,sand}', null, false, 3),
-  ('tote-004', 'Tote No. 004', 'Tote', 39.99, 12, 214, 'active', 'Structured leather, open top.',
+  ('tote-004', 'Tote No. 004', 'Tote', 345, 12, 214, 'active', 'Structured leather, open top.',
    'A clean-lined leather tote with angled side panels and long handles that sit comfortably on the shoulder.',
    '{"Full-grain leather","Angled side gussets","Interior slip pocket","W 34 × H 28 × D 14 cm"}', '{onyx,cognac}', '50% 70%', false, 4),
-  ('backpack-005', 'Backpack No. 005', 'Backpack', 49.99, 15, 97, 'active', 'Water-resistant nylon, tonal zips.',
+  ('backpack-005', 'Backpack No. 005', 'Backpack', 265, 15, 97, 'active', 'Water-resistant nylon, tonal zips.',
    'A minimal daypack in water-resistant nylon with a padded laptop sleeve and tonal matte zips that disappear into the body.',
    '{"Water-resistant nylon","Padded 15-inch laptop sleeve","Front zip pocket","Capacity 18 L"}', '{onyx,forest}', null, false, 5),
-  ('ankara-shopper-006', 'Ankara Shopper No. 006', 'Ankara', 64, 18, 0, 'active', 'Indigo wax print, sun rings in mustard and teal.',
+  ('ankara-shopper-006', 'Ankara Shopper No. 006', 'Ankara', 165, 18, 0, 'active', 'Indigo wax print, sun rings in mustard and teal.',
    'Our everyday shopper in a heavy cotton wax print, the kind sold by the bolt in Lagos markets. Each panel is cut by hand, so the rings fall a little differently on every bag.',
    '{"100% cotton wax print, lined in canvas","Handmade in Lagos, Nigeria","Reinforced handles, fits a 14-inch laptop","W 38 × H 42 cm"}', '{onyx}', null, true, 6),
-  ('ankara-tote-007', 'Ankara Tote No. 007', 'Ankara', 89, 10, 0, 'active', 'Plum print with nested diamonds, leather trim.',
+  ('ankara-tote-007', 'Ankara Tote No. 007', 'Ankara', 325, 10, 0, 'active', 'Plum print with nested diamonds, leather trim.',
    'The structured tote, wrapped in a plum wax print of nested diamonds and finished with leather edges. Bold enough for the weekend, neat enough for the office.',
    '{"Cotton wax print over a leather base","Handmade in Lagos, Nigeria","Angled side gussets, interior slip pocket","W 34 × H 28 × D 14 cm"}', '{onyx}', '50% 70%', true, 7),
-  ('ankara-saddle-008', 'Ankara Saddle No. 008', 'Ankara', 79, 12, 0, 'active', 'Rainbow fans on cream, tan leather strap.',
+  ('ankara-saddle-008', 'Ankara Saddle No. 008', 'Ankara', 285, 12, 0, 'active', 'Rainbow fans on cream, tan leather strap.',
    'Our signature saddle flap, made in a cream wax print of stacked fans. The tan strap and brushed-gold lock keep it grown-up.',
    '{"Cotton wax print, smooth leather trim","Handmade in Lagos, Nigeria","Adjustable tan strap, brushed-gold lock","W 26 × H 18 × D 8 cm"}', '{onyx}', null, false, 8),
-  ('mudcloth-backpack-009', 'Mud Cloth Backpack No. 009', 'African Craft', 98, 6, 0, 'active', 'Hand-painted mud cloth from Mali.',
+  ('mudcloth-backpack-009', 'Mud Cloth Backpack No. 009', 'African Craft', 310, 6, 0, 'active', 'Hand-painted mud cloth from Mali.',
    'A daypack faced in bògòlanfini, the cotton cloth Malian artisans dye with leaves and paint with fermented river mud. No two bolts match, so no two bags do either.',
    '{"Hand-dyed cotton mud cloth, nylon lining","Cloth from Mali, sewn in Lagos","Padded 15-inch laptop sleeve","Capacity 18 L"}', '{onyx}', null, false, 9)
 on conflict (id) do nothing;
+
+-- demo bags that still carry their first launch prices move to the premium ones
+-- (a price you've changed in the admin is left alone)
+update public.products p set price = v.new_price
+  from (values ('flap-bag-001', 30.99, 245), ('shopper-002', 24.99, 145), ('flap-bag-003', 34.99, 295),
+               ('tote-004', 39.99, 345), ('backpack-005', 49.99, 265), ('ankara-shopper-006', 64, 165),
+               ('ankara-tote-007', 89, 325), ('ankara-saddle-008', 79, 285),
+               ('mudcloth-backpack-009', 98, 310)) as v (id, old_price, new_price)
+ where p.id = v.id and p.price = v.old_price;
+
+insert into public.reviews (product_id, name, rating, body, status)
+select v.* from (values
+  ('ankara-tote-007', 'Temi A.', 5, 'The print is even better in person and the leather base feels solid. Got stopped twice on the subway.', 'published'),
+  ('ankara-tote-007', 'Danielle R.', 5, 'Arrived in Houston in six days, beautifully wrapped. Fits my laptop and lunch.', 'published'),
+  ('ankara-shopper-006', 'Chioma O.', 4, 'Lovely heavy cotton and the colours are rich. I wish it had an inside zip pocket.', 'published'),
+  ('flap-bag-003', 'Morgan L.', 5, 'Simple, well made and the strap length is perfect for crossbody.', 'published'),
+  ('mudcloth-backpack-009', 'Kwame B.', 5, 'You can see the hand painting up close. Easily my favourite bag.', 'published')
+) as v (product_id, name, rating, body, status)
+where not exists (select 1 from public.reviews);
 
 insert into public.discounts (code, kind, amount, used, usage_limit, expires_at, active) values
   ('ADA10', 'percent', 10, 0, 500, null, true),

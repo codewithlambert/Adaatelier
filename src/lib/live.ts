@@ -32,14 +32,19 @@ type LiveProduct = {
 };
 const PRODUCT_COLUMNS =
   "id, name, category, price, stock, colors, image_url, focus, tagline, description, details, is_new";
-type Live = { settings: LiveSettings | null; products: Record<string, LiveProduct> | null };
+type Live = {
+  settings: LiveSettings | null;
+  products: Record<string, LiveProduct> | null;
+  /** bundled bags the admin archived or drafted */
+  hidden: Set<string>;
+};
 
 let loading: Promise<Live> | undefined;
 
 function load(): Promise<Live> {
   loading ??= (async () => {
-    if (!supabase) return { settings: null, products: null };
-    const [s, p] = await Promise.all([
+    if (!supabase) return { settings: null, products: null, hidden: new Set<string>() };
+    const [s, p, h] = await Promise.all([
       supabase
         .from("store_settings")
         .select("maintenance, announcement_enabled, announcement")
@@ -47,6 +52,7 @@ function load(): Promise<Live> {
         .maybeSingle(),
       // shoppers can only read active products, so anything missing here is hidden
       supabase.from("products").select(PRODUCT_COLUMNS).order("sort_order").order("created_at"),
+      supabase.rpc("hidden_product_ids"),
     ]);
     return {
       settings: s.error ? null : (s.data as LiveSettings | null),
@@ -55,8 +61,9 @@ function load(): Promise<Live> {
         : Object.fromEntries(
             (p.data as LiveProduct[]).map((r) => [r.id, { ...r, price: Number(r.price) }]),
           ),
+      hidden: new Set(h.error ? [] : (h.data as string[])),
     };
-  })().catch(() => ({ settings: null, products: null }));
+  })().catch(() => ({ settings: null, products: null, hidden: new Set<string>() }));
   return loading;
 }
 
@@ -107,13 +114,15 @@ const bundledSlugs = new Set(bundled.map((p) => p.slug));
 
 /** The shop's catalogue: bundled bags the admin still has active, plus any added in the admin. */
 export function useCatalog(list: Product[]) {
-  const rows = useLive()?.products;
+  const live = useLive();
+  const rows = live?.products;
   if (!rows) return list;
   const extra = Object.values(rows)
     .filter((r) => !bundledSlugs.has(r.id))
     .map(fromRow)
     .filter((p): p is Product => !!p);
-  return [...list.filter((p) => p.slug in rows), ...extra];
+  // a bundled bag shows unless the admin hid it, so new bags appear before the database knows them
+  return [...list.filter((p) => !live.hidden.has(p.slug)), ...extra];
 }
 
 /** Looks up a product that only exists in the database (for direct links to its page). */

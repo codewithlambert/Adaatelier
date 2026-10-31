@@ -10,6 +10,7 @@ import { categories, money, products } from "@/lib/catalog";
 import { useCart } from "@/lib/cart";
 import { useLive } from "@/lib/live";
 import { loadGsap, markIntroDone, prefersReducedMotion } from "@/lib/motion";
+import { supabase } from "@/lib/supabase";
 
 const wrap = "mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12";
 
@@ -365,6 +366,20 @@ function CartButton() {
 
 function Footer() {
   const [sent, setSent] = useState(false);
+  const [email, setEmail] = useState("");
+  const [failed, setFailed] = useState(false);
+  const subscribe = async () => {
+    setFailed(false);
+    if (supabase) {
+      const { error } = await supabase
+        .from("subscribers")
+        .insert({ email: email.trim().toLowerCase(), source: "footer" });
+      // 23505: already on the list, which is a success for the shopper
+      if (error && error.code !== "23505") return setFailed(true);
+    }
+    setSent(true);
+    setEmail("");
+  };
   const cols = [
     {
       title: "Shop",
@@ -400,17 +415,24 @@ function Footer() {
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              setSent(true);
+              void subscribe();
             }}
             className="mt-10 max-w-md"
           >
             <p className="text-xs text-ink-foreground/60">
-              {sent ? "Thank you — you're on the list." : "Subscribe to our newsletter"}
+              {sent
+                ? "Thank you — you're on the list."
+                : failed
+                  ? "That didn't work. Check the address and try again."
+                  : "New drops and stories from the workshop, once a month"}
             </p>
             <div className="mt-4 flex items-center border-b border-ink-foreground/30 transition-colors focus-within:border-ink-foreground">
               <input
                 type="email"
                 required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                aria-label="Email address"
                 placeholder="Your email address"
                 className="min-w-0 flex-1 bg-transparent py-3 text-sm placeholder:text-ink-foreground/40 focus:outline-none"
               />

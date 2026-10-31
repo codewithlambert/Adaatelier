@@ -107,6 +107,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: "https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@300;400;500;600&display=swap",
       },
     ],
+    // Vercel Web Analytics (switch it on under the project's Analytics tab); privacy-friendly,
+    // no cookies, so no consent banner is needed
+    scripts: import.meta.env.PROD ? [{ src: "/_vercel/insights/script.js", defer: true }] : [],
   }),
   shellComponent: RootShell,
   component: RootComponent,

@@ -1,0 +1,8 @@
+# Edge Function settings for `supabase functions deploy`.
+# Both functions check their own callers (order email / provider signature), and the shop's
+# publishable key isn't a JWT, so Supabase's JWT check is switched off for them.
+[functions.checkout]
+verify_jwt = false
+
+[functions.payment-webhook]
+verify_jwt = false

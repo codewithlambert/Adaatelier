@@ -2,6 +2,7 @@ import { createFileRoute, notFound, useNavigate } from "@tanstack/react-router";
 import { useRef } from "react";
 import { ProductCard } from "@/components/site/ProductCard";
 import { ProductDetails } from "@/components/site/ProductDetails";
+import { Reviews } from "@/components/site/Reviews";
 import { Words } from "@/components/site/Words";
 import { useReveal } from "@/hooks/use-reveal";
 import { absoluteUrl } from "@/lib/site";
@@ -60,6 +61,8 @@ function ProductView() {
           })
         }
       />
+
+      <Reviews productId={p.slug} productName={p.name} />
 
       <section className="border-t py-24 md:py-32">
         <div className="mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12">

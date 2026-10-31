@@ -13,6 +13,11 @@ export const Route = createFileRoute("/checkout")({
   head: () => ({
     meta: [{ title: "Checkout — Ada Atelier" }, { name: "robots", content: "noindex" }],
   }),
+  // ?paid / ?unpaid: where Stripe and Bachs send shoppers back after their payment page
+  validateSearch: (s: Record<string, unknown>): { paid?: string; unpaid?: string } => ({
+    ...(typeof s["paid"] === "string" ? { paid: s["paid"] } : {}),
+    ...(typeof s["unpaid"] === "string" ? { unpaid: s["unpaid"] } : {}),
+  }),
   component: Checkout,
 });
 
@@ -25,6 +30,49 @@ const DEFAULT_SHIPPING = { standard: 6, express: 15 };
 type Discount = { code: string; kind: "percent" | "fixed" | "free_shipping"; amount: number };
 type Placed = { id: string | null; lines: CartLine[]; total: number; email: string };
 
+// the order waiting on its payment page, so a shopper who backs out can pay without re-entering it
+const PENDING_KEY = "ada-pending-order";
+type Pending = { id: string; email: string };
+function readPending(): Pending | null {
+  try {
+    return JSON.parse(sessionStorage.getItem(PENDING_KEY) ?? "null") as Pending | null;
+  } catch {
+    return null;
+  }
+}
+function writePending(p: Pending | null) {
+  try {
+    if (p) sessionStorage.setItem(PENDING_KEY, JSON.stringify(p));
+    else sessionStorage.removeItem(PENDING_KEY);
+  } catch {
+    // private mode: the shopper can still pay from the emailed link
+  }
+}
+
+/**
+ * Opens Stripe (or Bachs for Nigeria) for a saved order. Returns false when online payment
+ * isn't set up yet, so the order stays as "we'll email you a payment link".
+ */
+async function startPayment(order: Pending): Promise<"redirected" | "paid" | "offline"> {
+  if (!supabase) return "offline";
+  const { data, error } = await supabase.functions.invoke<{
+    url?: string;
+    paid?: boolean;
+    configured?: boolean;
+  }>("checkout", { body: { order_id: order.id, email: order.email } });
+  if (data?.paid) return "paid";
+  if (error || !data?.url) {
+    // 502: Stripe or Bachs refused. Anything else (function not deployed, no keys) means
+    // online payment isn't set up yet, and the order waits for an emailed link instead.
+    const status = (error as { context?: Response } | null)?.context?.status;
+    if (status === 502) throw new Error("payment");
+    return "offline";
+  }
+  writePending(order);
+  window.location.assign(data.url);
+  return "redirected";
+}
+
 /** Turns database errors into something a shopper can act on. */
 function friendly(message: string) {
   if (/only \d+ left/i.test(message) || /no longer available|not offered/i.test(message))
@@ -36,6 +84,95 @@ function friendly(message: string) {
 }
 
 function Checkout() {
+  const { paid, unpaid } = Route.useSearch();
+  if (paid) return <PaymentReturn id={paid} paid />;
+  if (unpaid) return <PaymentReturn id={unpaid} paid={false} />;
+  return <CheckoutForm />;
+}
+
+/** Back from Stripe or Bachs: either paid, or closed the page before paying. */
+function PaymentReturn({ id, paid }: { id: string; paid: boolean }) {
+  const { clear } = useCart();
+  const pending = typeof window === "undefined" ? null : readPending();
+  const [email, setEmail] = useState(pending?.id === id ? pending.email : "");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    if (paid) {
+      writePending(null);
+      clear();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paid]);
+
+  const retry = async (e: FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setBusy(true);
+    try {
+      const r = await startPayment({ id, email: email.trim() });
+      if (r === "paid") window.location.replace(`/checkout?paid=${id}`);
+      if (r === "offline") setError("Online payment is paused. We'll email you a payment link.");
+    } catch {
+      setError("We couldn't open the payment page. Check your email address and try again.");
+    }
+    setBusy(false);
+  };
+
+  return (
+    <div className="mx-auto max-w-xl px-5 pb-24 pt-36 text-center md:pt-48">
+      <LogoMark className="mx-auto h-12 w-12 animate-in zoom-in-50 duration-700" />
+      <h1 className="headline mt-8 text-6xl md:text-7xl">
+        {paid ? (
+          <>
+            Thank <em>you</em>
+          </>
+        ) : (
+          <>
+            Not <em>yet</em>
+          </>
+        )}
+      </h1>
+      <p className="mt-6 inline-block border px-4 py-2 text-sm tracking-[0.18em]">ORDER {id}</p>
+      {paid ? (
+        <>
+          <p className="mt-6 text-sm leading-relaxed text-muted-foreground">
+            Your payment went through. We&apos;re preparing your bag now and will email tracking as
+            soon as it ships.
+          </p>
+          <Link to="/shop" className="btn mt-10">
+            Continue shopping
+          </Link>
+        </>
+      ) : (
+        <form onSubmit={retry} className="mx-auto mt-6 max-w-sm space-y-6">
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            Your order is saved, but the payment wasn&apos;t finished. Nothing has been charged.
+          </p>
+          <input
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Email used for the order"
+            className={`${field} text-center`}
+          />
+          {error && (
+            <p role="alert" className="text-sm text-destructive">
+              {error}
+            </p>
+          )}
+          <button type="submit" disabled={busy} className="btn w-full justify-center">
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-3.5 w-3.5" />}
+            Pay now
+          </button>
+        </form>
+      )}
+    </div>
+  );
+}
+
+function CheckoutForm() {
   const { lines, subtotal, clear } = useCart();
   const [form, setForm] = useState({
     email: "",
@@ -139,12 +276,22 @@ function Checkout() {
       p_discount_code: discount?.code ?? null,
       p_express: express,
     });
-    setPlacing(false);
     if (err) {
+      setPlacing(false);
       setError(friendly(err.message));
       return;
     }
-    setPlaced({ id: data as string, ...snapshot });
+    const order = { id: data as string, email: form.email.trim() };
+    try {
+      if ((await startPayment(order)) === "redirected") {
+        clear();
+        return; // leaving for the payment page
+      }
+    } catch {
+      // the order is saved either way; the shopper can pay from the emailed link
+    }
+    setPlacing(false);
+    setPlaced({ id: order.id, ...snapshot });
     clear();
     window.scrollTo({ top: 0 });
   };
@@ -311,8 +458,9 @@ function Checkout() {
             <legend className="eyebrow mb-4">Payment</legend>
             <p className="flex items-start gap-3 text-sm leading-relaxed text-muted-foreground">
               <Lock className="mt-0.5 h-4 w-4 shrink-0" />
-              After you place your order we&apos;ll email a secure payment link: card, bank transfer
-              or mobile money.
+              {form.country === "Nigeria"
+                ? "You'll pay in naira on Bachs' secure page: card, bank transfer or USSD."
+                : "You'll pay on Stripe's secure page: card, Apple Pay or Google Pay. Prices are in US dollars."}
             </p>
           </fieldset>
 
