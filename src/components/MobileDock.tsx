@@ -5,8 +5,9 @@ import { useCart } from "@/lib/cart";
 
 /**
  * Floating mobile dock with no tiles: each button is its own icon's shape (a house, a
- * magnifier, a bag), outlined at rest and filled solid when it's the current page. A soft
- * halo in the page colour keeps the shapes readable over photos. Tucks away while scrolling down.
+ * magnifier, a bag), outlined at rest and filled solid when it's the current page. Each shape
+ * sits on a crisp light outline of itself (like a map pin), so it reads on light pages, dark
+ * photos and the footer alike. Tucks away while scrolling down.
  */
 export function MobileDock({ onSearch }: { onSearch: () => void }) {
   const { hidden } = useScrollDirection();
@@ -17,15 +18,26 @@ export function MobileDock({ onSearch }: { onSearch: () => void }) {
     "relative flex w-16 flex-col items-center gap-1 py-1.5 text-foreground transition-transform duration-300 active:scale-90";
   const shape = (Icon: LucideIcon, label: string, active: boolean) => (
     <>
-      <Icon
-        aria-hidden
-        className={`h-[30px] w-[30px] transition-[fill,transform] duration-500 ease-[var(--ease-luxe)] [filter:drop-shadow(0_0_6px_var(--color-background))_drop-shadow(0_2px_6px_rgb(0_0_0/0.18))] ${
-          active ? "-translate-y-0.5 fill-current" : "fill-transparent"
-        }`}
-        strokeWidth={active ? 1.4 : 1.6}
-      />
       <span
-        className={`text-[10px] leading-none tracking-[0.02em] [text-shadow:0_0_6px_var(--color-background),0_0_2px_var(--color-background)] ${
+        aria-hidden
+        className={`relative h-[30px] w-[30px] transition-transform duration-500 ease-[var(--ease-luxe)] ${
+          active ? "-translate-y-0.5" : ""
+        }`}
+      >
+        {/* the outline: the same shape, thicker, in the page colour */}
+        <Icon
+          className={`absolute inset-0 h-full w-full text-background ${active ? "fill-current" : "fill-transparent"}`}
+          strokeWidth={5}
+        />
+        <Icon
+          className={`absolute inset-0 h-full w-full transition-[fill] duration-500 ${
+            active ? "fill-current" : "fill-transparent"
+          }`}
+          strokeWidth={active ? 1.4 : 1.7}
+        />
+      </span>
+      <span
+        className={`text-[10px] leading-none tracking-[0.02em] [text-shadow:1px_0_0_var(--color-background),-1px_0_0_var(--color-background),0_1px_0_var(--color-background),0_-1px_0_var(--color-background),1px_1px_0_var(--color-background),-1px_-1px_0_var(--color-background),1px_-1px_0_var(--color-background),-1px_1px_0_var(--color-background)] ${
           active ? "font-semibold" : "font-medium"
         }`}
       >
