@@ -3,9 +3,10 @@ import { Shuffle } from "lucide-react";
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { ExtrudedBag } from "@/components/site/BagViewer3D";
 import { LogoMark } from "@/components/site/Logo";
-import { bagColors, colorName, modelled as products, money, type ColorId } from "@/lib/catalog";
+import { bagColors, colorName, modelled as products, type ColorId } from "@/lib/catalog";
 import { useCart } from "@/lib/cart";
 import { flyToBag, loadGsap, prefersReducedMotion } from "@/lib/motion";
+import { useCurrency } from "@/lib/currency";
 
 // Box, lid and bag dimensions in px (the whole stage is scaled down on small screens)
 const W = 300;
@@ -49,6 +50,7 @@ function Face({
 
 /** Pinned scroll scene: a CSS 3D box turns, its lid swings open and an extruded bag rises out and spins. */
 export function SurpriseBox() {
+  const { format } = useCurrency();
   const section = useRef<HTMLElement>(null);
   const bagSpin = useRef<HTMLDivElement>(null);
   const { add } = useCart();
@@ -326,7 +328,7 @@ export function SurpriseBox() {
             </Link>
           </p>
           <p className="mt-2 text-sm text-muted-foreground">
-            {colorName(pick.color)} · <span className="tabular-nums">{money(p.price)}</span>
+            {colorName(pick.color)} · <span className="tabular-nums">{format(p.price)}</span>
           </p>
         </div>
         <div className="flex flex-wrap items-center justify-center gap-3">

@@ -3,15 +3,17 @@ import { useRef, useState } from "react";
 import { BagViewer3D } from "@/components/site/BagViewer3D";
 import { ColorSwatches } from "@/components/site/ColorSwatches";
 import { Words } from "@/components/site/Words";
-import { colorName, modelled as products, money, type ColorId } from "@/lib/catalog";
+import { colorName, modelled as products, type ColorId } from "@/lib/catalog";
 import { useCart } from "@/lib/cart";
 import { flyToBag } from "@/lib/motion";
+import { useCurrency } from "@/lib/currency";
 
 // Placeholder surcharge for hand-set initials
 const MONOGRAM_FEE = 10;
 
 /** Pick a bag, a colourway and initials, and see it all on a drag-to-rotate 3D bag. */
 export function Customizer({ heading = "h2" }: { heading?: "h1" | "h2" }) {
+  const { format } = useCurrency();
   const [index, setIndex] = useState(1);
   const [color, setColor] = useState<ColorId>("cognac");
   const [initials, setInitials] = useState("AA");
@@ -90,7 +92,7 @@ export function Customizer({ heading = "h2" }: { heading?: "h1" | "h2" }) {
           </div>
           <label className="flex items-center justify-between gap-6 py-5">
             <span className="text-xs text-muted-foreground">
-              Monogram <span className="opacity-60">(+{money(MONOGRAM_FEE)})</span>
+              Monogram <span className="opacity-60">(+{format(MONOGRAM_FEE)})</span>
             </span>
             <input
               value={initials}
@@ -119,7 +121,7 @@ export function Customizer({ heading = "h2" }: { heading?: "h1" | "h2" }) {
             </button>
           </div>
           <button data-magnetic onClick={addToBag} className="btn flex-1 sm:flex-none">
-            Add to bag — {money(price * qty)}
+            Add to bag — {format(price * qty)}
           </button>
         </div>
       </div>

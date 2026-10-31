@@ -12,10 +12,11 @@ import { ColorSwatches } from "@/components/site/ColorSwatches";
 import { TintedImage } from "@/components/site/Tint";
 import { Words } from "@/components/site/Words";
 import { RatingSummary } from "@/components/site/Reviews";
-import { colorName, money, type ColorId, type Product } from "@/lib/catalog";
+import { colorName, type ColorId, type Product } from "@/lib/catalog";
 import { useCart } from "@/lib/cart";
 import { useLiveProduct } from "@/lib/live";
 import { flyToBag } from "@/lib/motion";
+import { formatIn, useCurrency } from "@/lib/currency";
 
 type Props = {
   product: Product;
@@ -26,6 +27,7 @@ type Props = {
 
 /** Gallery + buy box for one product: colourways, quantity, add to bag and the info accordion. */
 export function ProductDetails({ product: base, initialColor = "onyx", onColorChange }: Props) {
+  const { format, converted } = useCurrency();
   // admin-controlled name, price, stock and colourways
   const { product: p, stock, colors } = useLiveProduct(base);
   const soldOut = stock === 0;
@@ -156,8 +158,13 @@ export function ProductDetails({ product: base, initialColor = "onyx", onColorCh
           <Words lines={[p.name]} />
         </h1>
         <p data-fade className="mt-4 text-xl tabular-nums">
-          {money(p.price)}
+          {format(p.price)}
         </p>
+        {converted && (
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            Charged in US dollars: {formatIn(p.price, "USD", 1)}
+          </p>
+        )}
         <RatingSummary productId={p.slug} />
         <p data-fade className="mt-6 max-w-md text-sm leading-relaxed text-muted-foreground">
           {p.description}
@@ -198,7 +205,7 @@ export function ProductDetails({ product: base, initialColor = "onyx", onColorCh
             disabled={soldOut}
             className="btn flex-1 disabled:pointer-events-none disabled:opacity-50"
           >
-            {soldOut ? "Sold out" : `Add to bag — ${money(p.price * qty)}`}
+            {soldOut ? "Sold out" : `Add to bag — ${format(p.price * qty)}`}
           </button>
         </div>
         <p data-fade className="mt-4 text-xs text-muted-foreground">

@@ -4,12 +4,14 @@ import { Link } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
 import { ColorSwatches } from "@/components/site/ColorSwatches";
 import { TintedImage } from "@/components/site/Tint";
-import { colorName, money, type ColorId, type Product } from "@/lib/catalog";
+import { colorName, type ColorId, type Product } from "@/lib/catalog";
 import { useCart } from "@/lib/cart";
 import { useLiveProduct } from "@/lib/live";
 import { flyToBag } from "@/lib/motion";
+import { useCurrency } from "@/lib/currency";
 
 export function ProductCard({ p: base }: { p: Product }) {
+  const { format } = useCurrency();
   // admin-controlled name, price, stock and colourways
   const { product: p, stock, colors } = useLiveProduct(base);
   const soldOut = stock === 0;
@@ -95,7 +97,7 @@ export function ProductCard({ p: base }: { p: Product }) {
           <h3 className="text-[13px] md:text-sm">{p.name}</h3>
         </Link>
         <span className="text-[13px] tabular-nums text-muted-foreground md:text-sm">
-          {money(p.price)}
+          {format(p.price)}
         </span>
       </div>
       <div className="mt-2 flex items-center justify-between gap-2">

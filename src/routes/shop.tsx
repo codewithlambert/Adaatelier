@@ -1,9 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { Globe } from "lucide-react";
 import { useRef, useState } from "react";
 import { ProductCard } from "@/components/site/ProductCard";
 import { PageHeader } from "@/components/site/Words";
 import { useReveal } from "@/hooks/use-reveal";
 import { categories, products, type Category } from "@/lib/catalog";
+import { CountryPicker } from "@/lib/currency";
 import { useCatalog } from "@/lib/live";
 
 type ShopSearch = { cat?: Category };
@@ -83,9 +85,17 @@ function Shop() {
       </div>
 
       <div className="mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12">
-        <p className="mt-6 text-xs text-muted-foreground">
-          {list.length} {list.length === 1 ? "piece" : "pieces"}
-        </p>
+        <div className="mt-6 flex items-center justify-between gap-4 text-xs text-muted-foreground">
+          <p>
+            {list.length} {list.length === 1 ? "piece" : "pieces"}
+          </p>
+          {/* prices open in the shopper's currency; this lets them change it */}
+          <label className="flex items-center gap-1.5">
+            <Globe className="h-3.5 w-3.5" strokeWidth={1.5} />
+            <span className="hidden sm:inline">Prices for</span>
+            <CountryPicker className="max-w-[11rem] text-foreground" />
+          </label>
+        </div>
         <div
           key={cat ?? "all"}
           className="mt-6 grid grid-cols-2 gap-x-3 gap-y-12 sm:gap-x-6 lg:grid-cols-4"

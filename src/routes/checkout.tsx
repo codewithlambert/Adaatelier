@@ -27,8 +27,9 @@ import { LogoMark } from "@/components/site/Logo";
 import { TintedImage } from "@/components/site/Tint";
 import { PageHeader, Words } from "@/components/site/Words";
 import { useReveal } from "@/hooks/use-reveal";
-import { money } from "@/lib/catalog";
 import { useCart, type CartLine } from "@/lib/cart";
+import { countries, countryByName, formatIn, regions, useCurrency } from "@/lib/currency";
+import { PaymentMark } from "@/components/site/PaymentMarks";
 import { supabase } from "@/lib/supabase";
 
 export const Route = createFileRoute("/checkout")({
@@ -45,7 +46,6 @@ export const Route = createFileRoute("/checkout")({
 
 const field =
   "w-full border-b border-foreground/25 bg-transparent py-3 text-sm outline-none transition-colors placeholder:text-muted-foreground/70 focus:border-foreground";
-const countries = ["United States", "Nigeria", "United Kingdom", "Canada", "Ghana", "Other"];
 // used until store settings load (and when Supabase isn't configured)
 const DEFAULT_SHIPPING = { standard: 6, express: 15 };
 
@@ -196,6 +196,7 @@ function PaymentReturn({ id, paid }: { id: string; paid: boolean }) {
 
 function CheckoutForm() {
   const { lines, subtotal, clear } = useCart();
+  const { country, setCountry, format, converted } = useCurrency();
   const [form, setForm] = useState({
     email: "",
     phone: "",
@@ -217,6 +218,11 @@ function CheckoutForm() {
   const [placed, setPlaced] = useState<Placed | null>(null);
   const root = useRef<HTMLDivElement>(null);
   useReveal(root);
+
+  // delivery country starts as the shopper's detected (or chosen) country
+  useEffect(() => {
+    setForm((f) => (f.country === country.name ? f : { ...f, country: country.name }));
+  }, [country.name]);
 
   // shipping prices are set in the admin (store_settings)
   useEffect(() => {
@@ -333,7 +339,7 @@ function CheckoutForm() {
         <p className="mt-6 text-sm leading-relaxed text-muted-foreground">
           We&apos;ve received your order of {placed.lines.reduce((n, l) => n + l.qty, 0)}{" "}
           {placed.lines.length === 1 && placed.lines[0]!.qty === 1 ? "bag" : "bags"} (
-          {money(placed.total)}). We&apos;ll email{" "}
+          {format(placed.total)}). We&apos;ll email{" "}
           <span className="text-foreground">{placed.email}</span> with payment and delivery details.
         </p>
         <Link to="/shop" className="btn mt-10">
@@ -386,7 +392,7 @@ function CheckoutForm() {
                   <p className="mt-1 text-xs text-muted-foreground">Monogram · {l.monogram}</p>
                 )}
               </div>
-              <span className="tabular-nums">{money(l.price * l.qty)}</span>
+              <span className="tabular-nums">{format(l.price * l.qty)}</span>
             </div>
           </li>
         ))}
@@ -438,27 +444,34 @@ function CheckoutForm() {
           <dt className="text-muted-foreground">
             Subtotal · {items} {items === 1 ? "item" : "items"}
           </dt>
-          <dd className="tabular-nums">{money(subtotal)}</dd>
+          <dd className="tabular-nums">{format(subtotal)}</dd>
         </div>
         {off > 0 && (
           <div className="flex justify-between animate-in fade-in duration-300">
             <dt className="text-muted-foreground">Discount</dt>
-            <dd className="tabular-nums">−{money(off)}</dd>
+            <dd className="tabular-nums">−{format(off)}</dd>
           </div>
         )}
         <div className="flex justify-between">
           <dt className="text-muted-foreground">{express ? "Express" : "Standard"} shipping</dt>
-          <dd className="tabular-nums">{shipping ? money(shipping) : "Free"}</dd>
+          <dd className="tabular-nums">{shipping ? format(shipping) : "Free"}</dd>
         </div>
         <div className="flex items-baseline justify-between border-t border-foreground/10 pt-4">
           <dt>Total</dt>
           <dd className="headline text-3xl tabular-nums">
             <span className="mr-1.5 font-sans text-[11px] tracking-[0.14em] text-muted-foreground">
-              USD
+              {country.currency}
             </span>
-            {money(total)}
+            {format(total)}
           </dd>
         </div>
+        {converted && (
+          <p className="text-right text-[11px] leading-relaxed text-muted-foreground">
+            {nigeria
+              ? "Charged in naira on Bachs at today's rate."
+              : `Charged in US dollars: ${formatIn(total, "USD", 1)}. Your bank converts it.`}
+          </p>
+        )}
       </dl>
     </>
   );
@@ -471,7 +484,7 @@ function CheckoutForm() {
       className={`btn w-full disabled:opacity-60 ${className}`}
     >
       {placing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-3.5 w-3.5" />}
-      {placing ? "Opening secure payment…" : `Continue to payment · ${money(total)}`}
+      {placing ? "Opening secure payment…" : `Continue to payment · ${format(total)}`}
     </button>
   );
 
@@ -516,7 +529,7 @@ function CheckoutForm() {
               <span className="hidden group-open:inline">Hide order summary</span>
               <ChevronDown className="h-4 w-4 transition-transform duration-300 group-open:rotate-180" />
             </span>
-            <span className="tabular-nums">{money(total)}</span>
+            <span className="tabular-nums">{format(total)}</span>
           </summary>
           <div className="pb-6">{summary}</div>
         </details>
@@ -557,12 +570,22 @@ function CheckoutForm() {
                 <select
                   required
                   value={form.country}
-                  onChange={set("country")}
+                  onChange={(e) => {
+                    set("country")(e);
+                    const picked = countryByName(e.target.value);
+                    if (picked) setCountry(picked.code);
+                  }}
                   autoComplete="country-name"
                   className={`${field} cursor-pointer appearance-none pb-2 pt-5`}
                 >
-                  {countries.map((c) => (
-                    <option key={c}>{c}</option>
+                  {regions.map((r) => (
+                    <optgroup key={r} label={r}>
+                      {countries
+                        .filter((c) => c.region === r)
+                        .map((c) => (
+                          <option key={c.code}>{c.name}</option>
+                        ))}
+                    </optgroup>
                   ))}
                 </select>
                 <ChevronDown className="pointer-events-none absolute bottom-3 right-0 h-4 w-4 text-muted-foreground" />
@@ -652,10 +675,10 @@ function CheckoutForm() {
                       <span className="text-sm tabular-nums">
                         {discount?.kind === "free_shipping" ? (
                           <>
-                            <s className="mr-2 text-muted-foreground">{money(price)}</s>Free
+                            <s className="mr-2 text-muted-foreground">{format(price)}</s>Free
                           </>
                         ) : (
-                          money(price)
+                          format(price)
                         )}
                       </span>
                     </label>
@@ -687,18 +710,25 @@ function CheckoutForm() {
                   </div>
                   <Lock className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.5} />
                 </div>
-                <div className="mt-4 flex flex-wrap gap-1.5">
-                  {(nigeria
-                    ? ["Card", "Bank transfer", "USSD"]
-                    : ["Visa", "Mastercard", "Amex", "Apple Pay", "Google Pay"]
-                  ).map((m) => (
-                    <span
-                      key={m}
-                      className="border border-foreground/15 bg-background px-2 py-1 text-[10px] font-medium tracking-[0.06em]"
-                    >
-                      {m}
-                    </span>
-                  ))}
+                <div className="mt-4 flex flex-wrap items-center gap-1.5">
+                  {nigeria ? (
+                    <>
+                      <PaymentMark id="visa" />
+                      <PaymentMark id="mastercard" />
+                      {["Bank transfer", "USSD"].map((m) => (
+                        <span
+                          key={m}
+                          className="grid h-7 place-items-center rounded-[5px] border border-black/10 bg-white px-2 text-[10px] font-medium tracking-[0.04em] text-black"
+                        >
+                          {m}
+                        </span>
+                      ))}
+                    </>
+                  ) : (
+                    (["visa", "mastercard", "amex", "applepay", "googlepay"] as const).map((m) => (
+                      <PaymentMark key={m} id={m} />
+                    ))
+                  )}
                 </div>
                 <p className="mt-4 text-[11px] text-muted-foreground">
                   Secured by {nigeria ? "Bachs" : "Stripe"}. We never see or store your card.

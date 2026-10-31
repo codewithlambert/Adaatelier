@@ -55,6 +55,12 @@ export function MobileDock({ onSearch }: { onSearch: () => void }) {
         hidden ? "pointer-events-none translate-y-[140%] opacity-0" : "translate-y-0 opacity-100"
       }`}
     >
+      {/* a soft fade behind the icons (not a bar): whatever scrolls underneath dissolves into the
+          page colour first, so the shapes always sit on a clean background */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 -bottom-[max(0.75rem,env(safe-area-inset-bottom))] -top-10 -z-10 bg-gradient-to-t from-background from-45% via-background/80 to-transparent"
+      />
       <Link to="/" className={button} aria-current={path === "/" ? "page" : undefined}>
         {shape(Home, "Home", path === "/")}
       </Link>

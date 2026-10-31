@@ -44,12 +44,30 @@ function isH3SwallowedErrorBody(body: string): boolean {
   }
 }
 
+/**
+ * Passes the visitor's country (from the host's IP lookup: Vercel or Cloudflare) to the page in a
+ * short-lived cookie, so prices open in the shopper's currency. Only on page loads, never cached.
+ */
+function withGeoCookie(request: Request, response: Response): Response {
+  const country = (
+    request.headers.get("x-vercel-ip-country") ?? request.headers.get("cf-ipcountry")
+  )?.toUpperCase();
+  if (!country || !/^[A-Z]{2}$/.test(country)) return response;
+  if (!(response.headers.get("content-type") ?? "").includes("text/html")) return response;
+  const out = new Response(response.body, response);
+  out.headers.append(
+    "set-cookie",
+    `ada-geo=${country}; Path=/; Max-Age=86400; SameSite=Lax; Secure`,
+  );
+  return out;
+}
+
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
-      return await normalizeCatastrophicSsrResponse(response);
+      return withGeoCookie(request, await normalizeCatastrophicSsrResponse(response));
     } catch (error) {
       console.error(error);
       return new Response(renderErrorPage(), {

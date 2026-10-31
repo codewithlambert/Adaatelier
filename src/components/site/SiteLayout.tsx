@@ -1,6 +1,16 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { ArrowRight, Facebook, Instagram, Minus, Plus, Search, Twitter, X } from "lucide-react";
+import {
+  ArrowRight,
+  Facebook,
+  Instagram,
+  Minus,
+  Plus,
+  Search,
+  Twitter,
+  X,
+  Globe,
+} from "lucide-react";
 import { MobileDock } from "@/components/MobileDock";
 import { Logo, LogoMark } from "@/components/site/Logo";
 import { TintedImage, TintFilters } from "@/components/site/Tint";
@@ -12,11 +22,13 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { useScrollDirection } from "@/hooks/use-scroll-direction";
-import { categories, money, products } from "@/lib/catalog";
+import { categories, products } from "@/lib/catalog";
 import { useCart } from "@/lib/cart";
 import { useLive } from "@/lib/live";
 import { loadGsap, markIntroDone, prefersReducedMotion } from "@/lib/motion";
 import { supabase } from "@/lib/supabase";
+import { CountryPicker } from "@/lib/currency";
+import { useCurrency } from "@/lib/currency";
 
 const wrap = "mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12";
 
@@ -485,7 +497,13 @@ function Footer() {
       <div
         className={`${wrap} mt-10 flex items-center justify-between border-t border-ink-foreground/15 py-6 text-[11px] text-ink-foreground/60`}
       >
-        <span>©2026 Ada Atelier Ltd. All rights reserved</span>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-6">
+          <span>©2026 Ada Atelier Ltd. All rights reserved</span>
+          <label className="flex items-center gap-1.5">
+            <Globe className="h-3.5 w-3.5" strokeWidth={1.5} />
+            <CountryPicker className="text-ink-foreground [&_option]:text-black" />
+          </label>
+        </div>
         <div className="flex gap-2">
           {[
             { I: Facebook, label: "Facebook" },
@@ -514,6 +532,7 @@ function SearchSheet({
   open: boolean;
   onOpenChange: (o: boolean) => void;
 }) {
+  const { format } = useCurrency();
   const [query, setQuery] = useState("");
   const results = useMemo(
     () =>
@@ -556,7 +575,7 @@ function SearchSheet({
                 >
                   <img src={p.img} alt="" className="h-14 w-12 bg-surface object-cover" />
                   <span className="flex-1 text-sm">{p.name}</span>
-                  <span className="text-sm text-muted-foreground">{money(p.price)}</span>
+                  <span className="text-sm text-muted-foreground">{format(p.price)}</span>
                   <ArrowRight className="h-4 w-4 -translate-x-2 opacity-0 transition-all duration-500 group-hover:translate-x-0 group-hover:opacity-100" />
                 </Link>
               </li>
@@ -572,6 +591,7 @@ function SearchSheet({
 }
 
 function CartSheet() {
+  const { format, converted } = useCurrency();
   const { lines, count, subtotal, open, setOpen, setQty } = useCart();
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -603,7 +623,7 @@ function CartSheet() {
               <div className="flex flex-1 flex-col">
                 <div className="flex justify-between gap-3 text-sm">
                   <span>{l.name}</span>
-                  <span className="tabular-nums">{money(l.price * l.qty)}</span>
+                  <span className="tabular-nums">{format(l.price * l.qty)}</span>
                 </div>
                 <span className="mt-1 text-xs text-muted-foreground">{l.note}</span>
                 <div className="mt-auto flex items-center gap-4 text-xs">
@@ -643,9 +663,12 @@ function CartSheet() {
           <div className="border-t px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-6">
             <div className="flex justify-between text-sm">
               <span>Subtotal</span>
-              <span className="tabular-nums">{money(subtotal)}</span>
+              <span className="tabular-nums">{format(subtotal)}</span>
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">Shipping calculated at checkout.</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Shipping calculated at checkout.
+              {converted && " Prices are a guide; you pay in US dollars (or naira in Nigeria)."}
+            </p>
             <Link to="/checkout" onClick={() => setOpen(false)} className="btn mt-6 w-full">
               Checkout
             </Link>

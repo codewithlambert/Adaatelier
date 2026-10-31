@@ -1,9 +1,10 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowUpRight } from "lucide-react";
 import { useEffect, useRef } from "react";
-import { findProduct, money } from "@/lib/catalog";
+import { findProduct } from "@/lib/catalog";
 import { heroSlides, SLIDE_MS } from "@/lib/hero";
 import { loadGsap, prefersReducedMotion } from "@/lib/motion";
+import { useCurrency } from "@/lib/currency";
 
 /** Stacked slides; a change of `active` wipes the next one in, re-raises ADA and settles the bag. */
 export function HeroMedia({ active }: { active: number }) {
@@ -110,6 +111,7 @@ export function HeroControls({
   active: number;
   onSelect: (i: number) => void;
 }) {
+  const { format } = useCurrency();
   const slide = heroSlides[active] ?? heroSlides[0]!;
   const p = findProduct(slide.slug);
   return (
@@ -143,7 +145,7 @@ export function HeroControls({
           key={p.slug}
           to="/product/$slug"
           params={{ slug: p.slug }}
-          aria-label={`View ${p.name}, ${money(p.price)}`}
+          aria-label={`View ${p.name}, ${format(p.price)}`}
           className="glass group mt-2 flex items-center justify-between gap-4 rounded-full py-1.5 pl-5 pr-1.5 text-[13px] animate-in fade-in slide-in-from-bottom-2 duration-700 active:scale-[0.98]"
         >
           <span className="min-w-0 truncate">
@@ -153,7 +155,7 @@ export function HeroControls({
             <span className="ml-3 font-medium">{p.name}</span>
           </span>
           <span className="flex shrink-0 items-center gap-3 tabular-nums">
-            {money(p.price)}
+            {format(p.price)}
             <span className="grid h-9 w-9 place-items-center rounded-full bg-foreground text-background transition-transform duration-500 group-hover:rotate-45">
               <ArrowUpRight className="h-4 w-4" />
             </span>
