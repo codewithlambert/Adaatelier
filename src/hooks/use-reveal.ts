@@ -30,13 +30,25 @@ export function useReveal(
         gsap.from(scope.current, { opacity: 0, duration: 0.8, ease: "power2.out" });
 
         gsap.utils.toArray<HTMLElement>("[data-reveal]").forEach((el) => {
-          gsap.from(el.querySelectorAll("[data-word]"), {
-            yPercent: 110,
-            stagger: 0.05,
-            duration: 1.2,
-            ease: "expo.out",
-            scrollTrigger: { trigger: el, start: "top 90%" },
-          });
+          // words hinge up out of their masks, tipping toward the reader
+          const from = {
+            yPercent: 115,
+            rotateX: -85,
+            opacity: 0,
+            transformPerspective: 700,
+            transformOrigin: "50% 100% -30px",
+          };
+          const to = { yPercent: 0, rotateX: 0, opacity: 1, stagger: 0.08, ease: "power3.out" };
+          const words = el.querySelectorAll("[data-word]");
+          // already on screen at load (page titles): play once; otherwise build with the scroll
+          if (el.getBoundingClientRect().top < window.innerHeight * 0.75) {
+            gsap.fromTo(words, from, { ...to, duration: 1.3, stagger: 0.06, ease: "expo.out" });
+          } else {
+            gsap.fromTo(words, from, {
+              ...to,
+              scrollTrigger: { trigger: el, start: "top 95%", end: "top 55%", scrub: 0.8 },
+            });
+          }
         });
         gsap.utils.toArray<HTMLElement>("[data-fade]").forEach((el) => {
           gsap.from(el, {

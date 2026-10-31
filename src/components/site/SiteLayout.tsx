@@ -219,6 +219,9 @@ export function SiteLayout({ children }: { children: ReactNode }) {
     >
       <TintFilters />
 
+      {/* Film grain over everything; purely decorative */}
+      <div aria-hidden className="grain pointer-events-none fixed z-[60]" />
+
       {/* Scroll progress */}
       <div
         data-progress

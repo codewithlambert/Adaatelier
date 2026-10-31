@@ -1,15 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { SurpriseBox } from "@/components/SurpriseBox";
 import { Customizer } from "@/components/site/Customizer";
+import { HeroControls, HeroMedia } from "@/components/site/HeroSlides";
+import { heroSlides, SLIDE_MS } from "@/lib/hero";
+import { Manifesto } from "@/components/site/Manifesto";
 import { PostCard } from "@/components/site/PostCard";
 import { ProductCard } from "@/components/site/ProductCard";
 import { Words } from "@/components/site/Words";
 import { useReveal } from "@/hooks/use-reveal";
 import { categories, posts, products } from "@/lib/catalog";
-import { whenIntroDone } from "@/lib/motion";
-import hero from "@/assets/hero.jpg";
+import { prefersReducedMotion, whenIntroDone } from "@/lib/motion";
 import box from "@/assets/box.jpg";
 
 export const Route = createFileRoute("/")({
@@ -42,6 +44,14 @@ function Index() {
   const root = useRef<HTMLDivElement>(null);
   const activeCat = cat === 0 ? undefined : categories[cat - 1];
   const shown = activeCat ? products.filter((p) => p.cat === activeCat) : products;
+  const [slide, setSlide] = useState(0);
+
+  // advance the hero every SLIDE_MS; picking a slide restarts the timer
+  useEffect(() => {
+    if (prefersReducedMotion()) return;
+    const t = window.setTimeout(() => setSlide((s) => (s + 1) % heroSlides.length), SLIDE_MS);
+    return () => window.clearTimeout(t);
+  }, [slide]);
 
   useReveal(root, (gsap) => {
     // hero builds in once the preloader curtain lifts
@@ -79,14 +89,7 @@ function Index() {
       {/* Hero */}
       <section data-hero className="relative h-[100svh] min-h-[600px] overflow-hidden bg-surface">
         <div data-hero-media className="absolute inset-0">
-          <img
-            data-hero-img
-            src={hero}
-            alt="Black leather tote bag on white linen"
-            width={1600}
-            height={1008}
-            className="h-full w-full object-cover object-[50%_70%]"
-          />
+          <HeroMedia active={slide} />
         </div>
         <div
           data-hero-wordmark
@@ -100,6 +103,9 @@ function Index() {
           ))}
         </div>
         <div className={`${wrap} relative z-10 flex h-full flex-col justify-end pb-28 md:pb-12`}>
+          <div data-hero-fade className="mb-8 md:mb-10">
+            <HeroControls active={slide} onSelect={setSlide} />
+          </div>
           <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
             <h1 className="headline text-[15vw] sm:text-7xl lg:text-8xl">
               <Words lines={["Be Stylish", "& _Modish"]} />
@@ -137,6 +143,8 @@ function Index() {
           </div>
         </div>
       </div>
+
+      <Manifesto />
 
       {/* Collections */}
       <section className="py-24 md:py-36">

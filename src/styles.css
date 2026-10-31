@@ -274,6 +274,45 @@
     inset 0 1px 0 rgb(255 255 255 / 0.6);
 }
 
+/* Hero slide timer bar */
+@keyframes hero-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@utility hero-progress {
+  animation: hero-progress linear both;
+}
+
+/* Film grain: a monochrome noise tile that jitters a few steps per second */
+@keyframes grain {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  20% {
+    transform: translate(-3%, 2%);
+  }
+  40% {
+    transform: translate(2%, -3%);
+  }
+  60% {
+    transform: translate(-2%, -1%);
+  }
+  80% {
+    transform: translate(3%, 3%);
+  }
+}
+@utility grain {
+  inset: -10%;
+  opacity: 0.06;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: grain 0.9s steps(5) infinite;
+}
+
 /* CSS 3D helpers for the surprise box */
 @utility preserve-3d {
   transform-style: preserve-3d;
@@ -311,5 +350,12 @@
   }
   .marquee {
     animation: none;
+  }
+  .grain {
+    animation: none;
+  }
+  .hero-progress {
+    animation: none;
+    transform: scaleX(1);
   }
 }
