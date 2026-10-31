@@ -562,7 +562,7 @@ create policy "staff mark notifications" on public.notifications for update to a
 do $$
 declare t text;
 begin
-  foreach t in array array['orders', 'notifications', 'products', 'store_settings', 'reviews', 'subscribers'] loop
+  foreach t in array array['orders', 'notifications', 'products', 'store_settings', 'reviews', 'subscribers', 'discounts'] loop
     if not exists (select 1 from pg_publication_tables
                    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = t) then
       execute format('alter publication supabase_realtime add table public.%I', t);
