@@ -58,19 +58,12 @@ function Index() {
     const intro = gsap
       .timeline({ paused: true, defaults: { ease: "expo.out" } })
       .from("[data-hero-img]", { scale: 1.3, duration: 2 })
-      .from("[data-hero-letter]", { yPercent: 105, stagger: 0.06, duration: 1.5 }, "<0.1")
       .from("[data-hero] [data-word]", { yPercent: 110, stagger: 0.06, duration: 1.2 }, "<0.25")
       .from("[data-hero-fade]", { opacity: 0, y: 18, stagger: 0.1, duration: 1.1 }, "<0.3");
     const stop = whenIntroDone(() => intro.play());
 
     const heroScroll = { trigger: "[data-hero]", start: "top top", end: "bottom top", scrub: true };
     gsap.to("[data-hero-media]", { yPercent: 18, ease: "none", scrollTrigger: heroScroll });
-    gsap.to("[data-hero-wordmark]", {
-      yPercent: -45,
-      opacity: 0,
-      ease: "none",
-      scrollTrigger: heroScroll,
-    });
     gsap.to("[data-marquee-track]", {
       xPercent: -12,
       ease: "none",
@@ -90,17 +83,6 @@ function Index() {
       <section data-hero className="relative h-[100svh] min-h-[600px] overflow-hidden bg-surface">
         <div data-hero-media className="absolute inset-0">
           <HeroMedia active={slide} />
-        </div>
-        <div
-          data-hero-wordmark
-          aria-hidden
-          className="headline pointer-events-none absolute inset-x-0 top-[15%] flex justify-center overflow-hidden text-[34vw] leading-[0.85] tracking-[0.06em] md:top-[13%] md:text-[22vw]"
-        >
-          {"ADA".split("").map((l, i) => (
-            <span key={i} data-hero-letter className="inline-block">
-              {l}
-            </span>
-          ))}
         </div>
         <div className={`${wrap} relative z-10 flex h-full flex-col justify-end pb-28 md:pb-12`}>
           <div data-hero-fade className="mb-8 md:mb-10">

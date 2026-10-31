@@ -60,18 +60,27 @@ export function HeroMedia({ active }: { active: number }) {
             clipPath: i === 0 ? "inset(0% 0% 0% 0%)" : "inset(0% 0% 0% 100%)",
           }}
         >
-          <img
-            data-hero-img={i === 0 ? "" : undefined}
-            src={s.img}
-            alt={s.alt}
-            loading={i === 0 ? "eager" : "lazy"}
+          {/* the bag sits in the open space: below the header pill, and above the headline on phones */}
+          <div
             className={
               s.wide
-                ? "h-full w-full object-cover object-[50%_70%]"
-                : "absolute left-1/2 top-0 h-full w-auto max-w-none -translate-x-1/2 object-cover"
+                ? "absolute inset-x-0 bottom-[42%] top-20 overflow-hidden md:inset-0"
+                : "absolute inset-x-0 bottom-[42%] top-20 md:bottom-0 md:top-24"
             }
-            style={s.wide ? undefined : { maskImage: edgeFade, WebkitMaskImage: edgeFade }}
-          />
+          >
+            <img
+              data-hero-img={i === 0 ? "" : undefined}
+              src={s.img}
+              alt={s.alt}
+              loading={i === 0 ? "eager" : "lazy"}
+              className={
+                s.wide
+                  ? "h-full w-full object-cover object-[50%_70%]"
+                  : "absolute left-1/2 top-0 h-full w-auto max-w-none -translate-x-1/2 object-contain"
+              }
+              style={s.wide ? undefined : { maskImage: edgeFade, WebkitMaskImage: edgeFade }}
+            />
+          </div>
         </div>
       ))}
     </div>
