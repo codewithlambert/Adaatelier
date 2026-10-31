@@ -67,3 +67,20 @@ address: you should land on Stripe, pay, come back to "Thank you", and the order
 
 Going live: swap in the live keys (`sk_live_…`), `BACHS_API_URL=https://api.bachs.io`, and add the
 same webhooks in live mode with their own signing secrets.
+
+## After payment: tracking page and receipt email
+
+- **Tracking page.** After paying, shoppers land on `/track/<order>?t=<secret>`: a live timeline (placed →
+  paid → being prepared → shipped → delivered) with the courier and tracking number once you add them in the
+  admin (Orders → open an order → Delivery). The secret in the link means nobody can look up someone else's
+  order by guessing its number. The admin's "Copy customer's tracking link" button gives you the same link to
+  send on WhatsApp.
+- **Receipt email.** Sent by `payment-webhook` the moment the payment is confirmed, with the order summary and
+  the tracking link. Without a domain, use [Brevo](https://www.brevo.com) (free, 300 emails a day):
+  1. Sign up, then Senders, Domains & Dedicated IPs → Senders → add and verify your Gmail address.
+  2. SMTP & API → API keys → create a key.
+  3. Add two Edge Function secrets: `BREVO_API_KEY` (the key) and `EMAIL_FROM`
+     (`Ada Atelier <you@gmail.com>`, using the address you verified).
+
+  With your own domain later, [Resend](https://resend.com) works too: set `RESEND_API_KEY` instead of
+  `BREVO_API_KEY`. Until either is set, payments still go through and the email is simply skipped.

@@ -29,9 +29,14 @@ type Order = {
   total: number;
   status: string;
   paid_at: string | null;
+  track_token: string;
   address: { country?: string } | null;
   customers: { email: string; name: string } | null;
 };
+
+/** After paying, shoppers land on their own tracking page (the secret token unlocks it). */
+const trackUrl = (site: string, order: Order) =>
+  `${site}/track/${order.id}?t=${order.track_token}&paid=1`;
 
 async function stripeSession(order: Order, site: string) {
   const form = new URLSearchParams({
@@ -44,7 +49,7 @@ async function stripeSession(order: Order, site: string) {
     "line_items[0][price_data][currency]": "usd",
     "line_items[0][price_data][unit_amount]": String(Math.round(Number(order.total) * 100)),
     "line_items[0][price_data][product_data][name]": `Ada Atelier order ${order.id}`,
-    success_url: `${site}/checkout?paid=${order.id}`,
+    success_url: trackUrl(site, order),
     cancel_url: `${site}/checkout?unpaid=${order.id}`,
   });
   const res = await fetch("https://api.stripe.com/v1/checkout/sessions", {
@@ -76,7 +81,7 @@ async function bachsSession(order: Order, site: string) {
         pricing: { currency: "USD", amount: Number(order.total).toFixed(2) },
         customer: { email: order.customers?.email, name: order.customers?.name },
         metadata: { order_id: order.id },
-        success_url: `${site}/checkout?paid=${order.id}`,
+        success_url: trackUrl(site, order),
         cancel_url: `${site}/checkout?unpaid=${order.id}`,
       }),
     },
@@ -97,7 +102,7 @@ Deno.serve(async (req) => {
   const db = createClient(env("SUPABASE_URL"), env("SUPABASE_SERVICE_ROLE_KEY"));
   const { data: order } = await db
     .from("orders")
-    .select("id, total, status, paid_at, address, customers(email, name)")
+    .select("id, total, status, paid_at, track_token, address, customers(email, name)")
     .eq("id", order_id)
     .maybeSingle<Order>();
 

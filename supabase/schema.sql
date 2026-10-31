@@ -105,6 +105,13 @@ create table if not exists public.orders (
 );
 -- payments (Stripe for cards worldwide, Bachs for naira); set by the payment webhook only
 alter table public.orders add column if not exists paid_at timestamptz;
+-- order tracking: a secret per order for the shopper's tracking link, and when each step happened
+alter table public.orders add column if not exists track_token uuid not null default gen_random_uuid();
+alter table public.orders add column if not exists shipped_at timestamptz;
+alter table public.orders add column if not exists delivered_at timestamptz;
+alter table public.orders add column if not exists cancelled_at timestamptz;
+alter table public.orders add column if not exists courier text;
+alter table public.orders add column if not exists confirmation_sent_at timestamptz;
 alter table public.orders add column if not exists currency text not null default 'USD';
 create index if not exists orders_created_idx on public.orders (created_at desc);
 create index if not exists orders_status_idx on public.orders (status);
@@ -360,6 +367,58 @@ end $$;
 
 revoke all on function public.place_order(jsonb, jsonb, text, text, text, text, boolean) from public;
 grant execute on function public.place_order(jsonb, jsonb, text, text, text, text, boolean) to anon, authenticated;
+
+-- stamp each step of the timeline the first time an order reaches it
+create or replace function public.stamp_order_steps() returns trigger
+language plpgsql set search_path = '' as $$
+begin
+  if new.status is distinct from old.status then
+    if new.status = 'shipped' and new.shipped_at is null then new.shipped_at := now(); end if;
+    if new.status = 'delivered' then
+      new.delivered_at := coalesce(new.delivered_at, now());
+      new.shipped_at := coalesce(new.shipped_at, new.delivered_at);
+    end if;
+    if new.status = 'cancelled' and new.cancelled_at is null then new.cancelled_at := now(); end if;
+  end if;
+  return new;
+end $$;
+drop trigger if exists orders_stamp_steps on public.orders;
+create trigger orders_stamp_steps before update on public.orders
+  for each row execute function public.stamp_order_steps();
+
+-- what the shopper's tracking page shows; only with the secret from their link or email
+create or replace function public.track_order(p_id text, p_token uuid)
+returns jsonb
+language sql stable security definer set search_path = '' as $$
+  select jsonb_build_object(
+    'id', o.id,
+    'status', o.status,
+    'created_at', o.created_at,
+    'paid_at', o.paid_at,
+    'shipped_at', o.shipped_at,
+    'delivered_at', o.delivered_at,
+    'cancelled_at', o.cancelled_at,
+    'courier', o.courier,
+    'tracking_ref', o.tracking_ref,
+    'payment_method', o.payment_method,
+    'subtotal', o.subtotal,
+    'discount', o.discount,
+    'shipping', o.shipping,
+    'total', o.total,
+    'city', o.city,
+    'name', c.name,
+    'items', coalesce((
+      select jsonb_agg(jsonb_build_object(
+        'product_id', i.product_id, 'name', i.product_name, 'color', i.color,
+        'qty', i.qty, 'unit_price', i.unit_price, 'monogram', i.monogram) order by i.id)
+      from public.order_items i where i.order_id = o.id), '[]'::jsonb)
+  )
+  from public.orders o
+  join public.customers c on c.id = o.customer_id
+  where o.id = p_id and o.track_token = p_token
+$$;
+revoke all on function public.track_order(text, uuid) from public;
+grant execute on function public.track_order(text, uuid) to anon, authenticated;
 
 -- discount preview for the checkout page (no counts or internals exposed)
 create or replace function public.check_discount(p_code text)
