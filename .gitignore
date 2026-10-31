@@ -36,3 +36,6 @@ dist-ssr
 
 # Local Vercel build output
 .vercel/
+
+# sales prospects and pitch prices: kept local, not published with the site
+outreach/
