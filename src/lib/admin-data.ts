@@ -4,10 +4,34 @@ import { products } from "@/lib/catalog";
 export const ADMIN_NAME = "Ada";
 
 export const stats = [
-  { id: "products", label: "Total products", value: 250, change: 2.5 },
-  { id: "completed", label: "Completed order", value: 124, change: 2.5 },
-  { id: "canceled", label: "Canceled order", value: 14, change: -1.5 },
-  { id: "top", label: "Top products", value: 119, change: 2.5 },
+  {
+    id: "products",
+    label: "Total products",
+    value: 250,
+    change: 2.5,
+    trend: [212, 220, 218, 229, 236, 233, 244, 250],
+  },
+  {
+    id: "completed",
+    label: "Completed order",
+    value: 124,
+    change: 2.5,
+    trend: [96, 104, 99, 110, 108, 117, 115, 124],
+  },
+  {
+    id: "canceled",
+    label: "Canceled order",
+    value: 14,
+    change: -1.5,
+    trend: [9, 12, 11, 15, 13, 17, 16, 14],
+  },
+  {
+    id: "top",
+    label: "Top products",
+    value: 119,
+    change: 2.5,
+    trend: [88, 94, 101, 97, 106, 110, 114, 119],
+  },
 ] as const;
 
 export type Range = "1d" | "7d" | "30d" | "16m" | "Max";

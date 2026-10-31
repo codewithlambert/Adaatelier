@@ -1,8 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
-  ArrowDown,
-  ArrowUp,
   Award,
   Bell,
   Box,
@@ -11,14 +9,19 @@ import {
   ClipboardCheck,
   ClipboardX,
   Menu,
+  Search,
   type LucideIcon,
 } from "lucide-react";
+import { toast, Toaster } from "sonner";
+import { CommandMenu } from "@/components/admin/CommandMenu";
 import { SalesReport } from "@/components/admin/SalesReport";
+import { StatCard } from "@/components/admin/StatCard";
 import { Sidebar, type Section } from "@/components/admin/Sidebar";
 import { TopSeller } from "@/components/admin/TopSeller";
 import { Transactions } from "@/components/admin/Transactions";
 import { LogoMark } from "@/components/site/Logo";
 import { ADMIN_NAME, stats } from "@/lib/admin-data";
+import { bagColors, money, products } from "@/lib/catalog";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -37,6 +40,9 @@ const statIcons: Record<(typeof stats)[number]["id"], LucideIcon> = {
   top: Award,
 };
 
+const cities = ["Lagos", "Abuja", "Port Harcourt", "Ibadan", "Enugu", "Accra"];
+const pick = <T,>(xs: readonly T[]) => xs[Math.floor(Math.random() * xs.length)]!;
+
 function greetingFor(hour: number) {
   return hour < 12 ? "Good Morning" : hour < 17 ? "Good Afternoon" : "Good Evening";
 }
@@ -45,6 +51,23 @@ function Admin() {
   const [section, setSection] = useState<Section>("Overview");
   const [collapsed, setCollapsed] = useState(false);
   const [drawer, setDrawer] = useState(false);
+  const [palette, setPalette] = useState(false);
+  const [orders, setOrders] = useState(10);
+  const [unread, setUnread] = useState(7);
+
+  // demo "live" feed: a new order lands every so often (replace with a realtime subscription)
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      const p = pick(products);
+      const c = pick(bagColors);
+      setOrders((n) => n + 1);
+      setUnread((n) => n + 1);
+      toast(`New order · ${money(p.price)}`, {
+        description: `${p.name} in ${c.name} · ${pick(cities)}`,
+      });
+    }, 18000);
+    return () => window.clearInterval(id);
+  }, []);
   // time-of-day text is filled in on the client so server and browser HTML agree
   const [now, setNow] = useState<{ greet: string; date: string } | null>(null);
   useEffect(() => {
@@ -70,6 +93,7 @@ function Admin() {
             onSelect={select}
             collapsed={collapsed}
             onToggle={() => setCollapsed((c) => !c)}
+            ordersBadge={orders}
           />
         </div>
         {drawer && (
@@ -80,6 +104,7 @@ function Admin() {
                 onSelect={select}
                 collapsed={false}
                 onToggle={() => setDrawer(false)}
+                ordersBadge={orders}
               />
             </div>
             <button
@@ -108,20 +133,43 @@ function Admin() {
                 Here&apos;s what&apos;s happening with your store today
               </p>
             </div>
-            <div className="hidden h-11 items-center gap-2.5 rounded-xl px-1 text-[13.5px] font-medium md:flex">
+            <span className="hidden items-center gap-2 rounded-full bg-emerald-50 px-3 py-1.5 text-[12px] font-medium text-emerald-600 ring-1 ring-emerald-100 xl:flex">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+              </span>
+              Live
+            </span>
+            <button
+              onClick={() => setPalette(true)}
+              className="hidden h-11 w-[220px] items-center gap-2.5 rounded-xl border border-zinc-200 px-3.5 text-[13px] text-zinc-400 transition-colors hover:border-zinc-300 hover:bg-zinc-50 md:flex"
+            >
+              <Search className="h-4 w-4" />
+              <span className="flex-1 text-left">Search anything…</span>
+              <kbd className="rounded-md border border-zinc-200 bg-zinc-50 px-1.5 py-0.5 font-sans text-[10.5px] text-zinc-500">
+                Ctrl K
+              </kbd>
+            </button>
+            <div className="hidden h-11 items-center gap-2.5 rounded-xl px-1 text-[13.5px] font-medium 2xl:flex">
               <span className="grid h-9 w-9 place-items-center rounded-full bg-zinc-100">
                 <CalendarDays className="h-4 w-4 text-zinc-600" />
               </span>
               {now?.date ?? " "}
             </div>
             <button
-              aria-label="Notifications, 7 unread"
+              aria-label={`Notifications, ${unread} unread`}
+              onClick={() => setUnread(0)}
               className="relative grid h-11 w-11 place-items-center rounded-full border border-zinc-200 hover:bg-zinc-50"
             >
               <Bell className="h-[18px] w-[18px]" />
-              <span className="absolute -top-0.5 right-0 grid h-[18px] min-w-[18px] place-items-center rounded-full border-2 border-white bg-rose-400 px-1 text-[10px] font-medium text-white">
-                7
-              </span>
+              {unread > 0 && (
+                <span
+                  key={unread}
+                  className="absolute -top-0.5 right-0 grid h-[18px] min-w-[18px] place-items-center rounded-full border-2 border-white bg-rose-400 px-1 text-[10px] font-medium text-white animate-in zoom-in-50 duration-300"
+                >
+                  {unread}
+                </span>
+              )}
             </button>
             <button className="flex h-11 items-center gap-2 rounded-full border border-zinc-200 py-1 pl-1 pr-3 hover:bg-zinc-50">
               <span className="relative grid h-9 w-9 place-items-center rounded-full bg-zinc-900 text-white">
@@ -137,43 +185,17 @@ function Admin() {
               <div className="space-y-8 animate-in fade-in duration-500">
                 {/* stats */}
                 <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
-                  {stats.map((s) => {
-                    const Icon = statIcons[s.id];
-                    const up = s.change >= 0;
-                    return (
-                      <div
-                        key={s.id}
-                        className="flex items-center gap-3.5 rounded-2xl bg-[#f5f5f6] px-4 py-4 sm:px-5"
-                      >
-                        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white shadow-sm">
-                          <Icon className="h-[18px] w-[18px] text-zinc-800" strokeWidth={1.9} />
-                        </span>
-                        <div className="min-w-0">
-                          <p className="truncate text-[12.5px] text-zinc-500">{s.label}</p>
-                          <p className="mt-1 flex items-center gap-2">
-                            <span className="text-[22px] font-semibold leading-none tabular-nums">
-                              {s.value}
-                            </span>
-                            <span
-                              className={`flex items-center gap-1 text-[11.5px] ${up ? "text-emerald-500" : "text-rose-400"}`}
-                            >
-                              <span
-                                className={`grid h-3.5 w-3.5 place-items-center rounded-full text-white ${up ? "bg-emerald-400" : "bg-rose-400"}`}
-                              >
-                                {up ? (
-                                  <ArrowUp className="h-2.5 w-2.5" strokeWidth={3} />
-                                ) : (
-                                  <ArrowDown className="h-2.5 w-2.5" strokeWidth={3} />
-                                )}
-                              </span>
-                              {up ? "+" : ""}
-                              {s.change}%
-                            </span>
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })}
+                  {stats.map((s, i) => (
+                    <StatCard
+                      key={s.id}
+                      label={s.label}
+                      value={s.value}
+                      change={s.change}
+                      trend={[...s.trend]}
+                      icon={statIcons[s.id]}
+                      index={i}
+                    />
+                  ))}
                 </div>
 
                 <SalesReport />
@@ -203,6 +225,19 @@ function Admin() {
           </main>
         </div>
       </div>
+
+      <CommandMenu open={palette} onOpenChange={setPalette} onGo={select} />
+      <Toaster
+        position="bottom-right"
+        toastOptions={{
+          classNames: {
+            toast:
+              "!rounded-2xl !border-zinc-200/80 !bg-white/90 !backdrop-blur-xl !shadow-[0_20px_50px_-20px_rgb(15_23_42/0.35)] !font-sans",
+            title: "!text-[13px] !font-semibold !text-zinc-900",
+            description: "!text-[12px] !text-zinc-500",
+          },
+        }}
+      />
     </div>
   );
 }

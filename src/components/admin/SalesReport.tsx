@@ -9,6 +9,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useCountUp } from "@/hooks/use-count-up";
 import { ranges, sales, type Range, type SalesPoint } from "@/lib/admin-data";
 
 const BLUE = "#5b8db8";
@@ -43,6 +44,7 @@ export function SalesReport() {
   const [range, setRange] = useState<Range>("7d");
   const data = sales[range];
   const [hover, setHover] = useState<number | null>(null);
+  const total = useCountUp(data.total, 1200, 250);
   const active = hover ?? Math.min(7, data.points.length - 1);
 
   return (
@@ -50,11 +52,8 @@ export function SalesReport() {
       <div className="flex flex-col">
         <h2 className="text-[17px] font-semibold text-zinc-900">Your sales report</h2>
         <p className="mt-1 text-[13px] text-zinc-400">Look at your sale</p>
-        <p
-          key={range}
-          className="mt-10 text-[40px] font-semibold leading-none tracking-tight text-zinc-900 animate-in fade-in slide-in-from-bottom-1 duration-500 sm:text-[46px]"
-        >
-          {usd(data.total)}
+        <p className="mt-10 text-[40px] font-semibold leading-none tracking-tight text-zinc-900 animate-in fade-in slide-in-from-bottom-1 duration-500 sm:text-[46px]">
+          {usd(total)}
         </p>
         <p className="mt-4 flex items-center gap-2 text-[13px] text-emerald-500">
           <span className="grid h-4 w-4 place-items-center rounded-full bg-emerald-400 text-white">

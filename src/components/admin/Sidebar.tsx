@@ -14,6 +14,7 @@ import {
   Wallet,
   type LucideIcon,
 } from "lucide-react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { LogoMark } from "@/components/site/Logo";
 
 export type Section =
@@ -55,6 +56,8 @@ type Props = {
   onSelect: (s: Section) => void;
   collapsed: boolean;
   onToggle: () => void;
+  /** live count shown on Orders */
+  ordersBadge?: number;
 };
 
 function Group({ title, collapsed }: { title: string; collapsed: boolean }) {
@@ -65,12 +68,25 @@ function Group({ title, collapsed }: { title: string; collapsed: boolean }) {
   );
 }
 
-export function Sidebar({ active, onSelect, collapsed, onToggle }: Props) {
+export function Sidebar({ active, onSelect, collapsed, onToggle, ordersBadge }: Props) {
+  const nav = useRef<HTMLElement>(null);
+  const [pill, setPill] = useState<{ top: number; height: number } | null>(null);
+
+  // one highlight that glides to the active item instead of each item lighting up
+  useLayoutEffect(() => {
+    const measure = () => {
+      const el = nav.current?.querySelector<HTMLElement>(`[data-section="${active}"]`);
+      setPill(el ? { top: el.offsetTop, height: el.offsetHeight } : null);
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    if (nav.current) ro.observe(nav.current);
+    return () => ro.disconnect();
+  }, [active, collapsed]);
+
   const item = (on: boolean) =>
-    `relative flex h-10 w-full items-center gap-3 rounded-xl px-3 text-[13.5px] transition-colors ${
-      on
-        ? "bg-zinc-200/70 font-medium text-zinc-900"
-        : "text-zinc-600 hover:bg-zinc-200/40 hover:text-zinc-900"
+    `relative z-[1] flex h-10 w-full items-center gap-3 rounded-xl px-3 text-[13.5px] transition-colors duration-300 ${
+      on ? "font-medium text-zinc-900" : "text-zinc-600 hover:bg-zinc-200/40 hover:text-zinc-900"
     } ${collapsed ? "justify-center px-0" : ""}`;
 
   return (
@@ -99,13 +115,22 @@ export function Sidebar({ active, onSelect, collapsed, onToggle }: Props) {
         <ChevronLeft className={`h-4 w-4 transition-transform ${collapsed ? "rotate-180" : ""}`} />
       </button>
 
-      <nav className="mt-3 flex-1 overflow-y-auto [scrollbar-width:none]">
+      <nav ref={nav} className="relative mt-3 flex-1 overflow-y-auto [scrollbar-width:none]">
+        {pill && (
+          <span
+            aria-hidden
+            className="absolute inset-x-0 rounded-xl bg-white shadow-[0_1px_2px_rgb(0_0_0/0.06),0_6px_16px_-8px_rgb(0_0_0/0.18)] ring-1 ring-zinc-200/70 transition-[transform,height] duration-500 ease-[cubic-bezier(0.19,1,0.22,1)]"
+            style={{ transform: `translateY(${pill.top}px)`, height: pill.height, top: 0 }}
+          />
+        )}
         <Group title="Main Menu" collapsed={collapsed} />
         <ul className="space-y-1">
           {main.map(({ label, icon: Icon, badge }) => (
             <li key={label}>
               <button
+                data-section={label}
                 onClick={() => onSelect(label)}
+                aria-current={active === label ? "page" : undefined}
                 className={item(active === label)}
                 title={collapsed ? label : undefined}
               >
@@ -117,7 +142,7 @@ export function Sidebar({ active, onSelect, collapsed, onToggle }: Props) {
                       collapsed ? "absolute right-1.5 top-1 h-4 min-w-4 text-[9px]" : ""
                     }`}
                   >
-                    {badge}
+                    {label === "Orders" && ordersBadge !== undefined ? ordersBadge : badge}
                   </span>
                 )}
               </button>
@@ -130,7 +155,9 @@ export function Sidebar({ active, onSelect, collapsed, onToggle }: Props) {
           {channels.map(({ label, icon: Icon }) => (
             <li key={label}>
               <button
+                data-section={label}
                 onClick={() => onSelect(label)}
+                aria-current={active === label ? "page" : undefined}
                 className={item(active === label)}
                 title={collapsed ? label : undefined}
               >
