@@ -1,10 +1,16 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { ArrowRight, Facebook, Instagram, Minus, Plus, Search, Twitter } from "lucide-react";
+import { ArrowRight, Facebook, Instagram, Minus, Plus, Search, Twitter, X } from "lucide-react";
 import { MobileDock } from "@/components/MobileDock";
 import { Logo, LogoMark } from "@/components/site/Logo";
 import { TintedImage, TintFilters } from "@/components/site/Tint";
-import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { useScrollDirection } from "@/hooks/use-scroll-direction";
 import { categories, money, products } from "@/lib/catalog";
 import { useCart } from "@/lib/cart";
@@ -40,6 +46,8 @@ export function SiteLayout({ children }: { children: ReactNode }) {
     settings?.announcement_enabled && settings.announcement.trim() ? settings.announcement : null;
   const closed = !!settings?.maintenance && !preview;
   const { hidden, scrolled } = useScrollDirection();
+  // a soft drop shadow while over the hero; the glass carries its own once scrolling
+  const lift = scrolled ? "" : "!shadow-[0_8px_24px_-14px_rgb(0_0_0/0.25)]";
   const path = useRouterState({ select: (s) => s.location.pathname });
   const root = useRef<HTMLDivElement>(null);
 
@@ -285,15 +293,18 @@ export function SiteLayout({ children }: { children: ReactNode }) {
           hidden ? "pointer-events-none -translate-y-[160%] opacity-0" : "translate-y-0 opacity-100"
         }`}
       >
-        <div
-          className={`glass flex h-14 items-center justify-between rounded-full pl-5 pr-2 transition-shadow duration-700 md:h-[60px] md:pl-6 ${
-            scrolled ? "" : "!shadow-[0_8px_24px_-14px_rgb(0_0_0/0.25)]"
-          }`}
-        >
-          <Link to="/" className="text-lg md:text-xl" aria-label="Ada Atelier home">
+        {/* separate floating pieces (logo, page links, bag) rather than one bar housing them all */}
+        <div className="flex items-center justify-between gap-2">
+          <Link
+            to="/"
+            className={`glass flex h-14 items-center rounded-full px-5 text-lg transition-shadow duration-700 md:h-[60px] md:px-6 md:text-xl ${lift}`}
+            aria-label="Ada Atelier home"
+          >
             <Logo />
           </Link>
-          <nav className="hidden items-center gap-1 text-[13px] lg:flex">
+          <nav
+            className={`glass hidden h-[60px] items-center gap-1 rounded-full px-2 text-[13px] transition-shadow duration-700 lg:flex ${lift}`}
+          >
             {navLinks.map((l) => (
               <Link
                 key={l.to}
@@ -305,10 +316,10 @@ export function SiteLayout({ children }: { children: ReactNode }) {
               </Link>
             ))}
           </nav>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
             <button
               onClick={() => setSearchOpen(true)}
-              className="hidden h-10 w-10 place-items-center rounded-full transition-colors duration-500 hover:bg-foreground/[0.06] md:grid"
+              className={`glass hidden h-[60px] w-[60px] place-items-center rounded-full transition-shadow duration-700 active:scale-95 md:grid ${lift}`}
               aria-label="Search"
             >
               <Search className="h-4 w-4" strokeWidth={1.6} />
@@ -350,13 +361,13 @@ function CartButton() {
     <button
       data-bag-target
       onClick={() => setOpen(true)}
-      className="flex h-10 items-center gap-2 rounded-full bg-foreground pl-4 pr-1.5 text-[13px] text-background transition-transform duration-500 active:scale-95"
+      className="flex h-14 items-center gap-2.5 rounded-full bg-foreground pl-5 pr-2 text-[13px] text-background shadow-[0_10px_28px_-12px_rgb(0_0_0/0.5)] transition-transform duration-500 active:scale-95 md:h-[60px]"
       aria-label={`Bag, ${count} ${count === 1 ? "item" : "items"}`}
     >
       Bag
       <span
         key={count}
-        className="grid h-7 min-w-7 place-items-center rounded-full bg-background px-1.5 text-[11px] tabular-nums text-foreground animate-in zoom-in-50 duration-300"
+        className="grid h-10 min-w-10 place-items-center rounded-full bg-background px-2 text-[12px] tabular-nums text-foreground animate-in zoom-in-50 duration-300 md:h-11 md:min-w-11"
       >
         {count}
       </span>
@@ -513,13 +524,20 @@ function SearchSheet({
   );
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
+      {/* capped at the screen height with only the results scrolling, so the close button can't
+          scroll away and a tap meant for it can't land on a product link */}
       <SheetContent
         side="top"
-        className="border-0 bg-background/85 px-5 pb-10 pt-16 backdrop-blur-2xl sm:px-12"
+        className="flex max-h-[100dvh] flex-col border-0 bg-background/90 px-5 pb-6 pt-5 backdrop-blur-2xl sm:px-12 sm:pb-10 [&>button:first-child]:hidden"
       >
         <SheetTitle className="sr-only">Search</SheetTitle>
         <SheetDescription className="sr-only">Search the Ada Atelier collection</SheetDescription>
-        <div className="mx-auto max-w-3xl">
+        <div className="mx-auto flex w-full max-w-3xl justify-end">
+          <SheetClose className="glass flex h-10 items-center gap-1.5 rounded-full px-4 text-[12px] font-medium active:scale-95">
+            <X className="h-4 w-4" strokeWidth={1.7} /> Close
+          </SheetClose>
+        </div>
+        <div className="mx-auto mt-4 flex min-h-0 w-full max-w-3xl flex-1 flex-col">
           <input
             autoFocus
             value={query}
@@ -527,7 +545,7 @@ function SearchSheet({
             placeholder="Search bags…"
             className="headline w-full border-b border-foreground/20 bg-transparent pb-3 text-4xl outline-none placeholder:text-muted-foreground/60 focus:border-foreground md:text-6xl"
           />
-          <ul className="mt-6 divide-y">
+          <ul className="mt-6 min-h-0 flex-1 divide-y overflow-y-auto overscroll-contain [scrollbar-width:none]">
             {results.map((p) => (
               <li key={p.slug}>
                 <Link
