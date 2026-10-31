@@ -39,3 +39,8 @@ dist-ssr
 
 # sales prospects and pitch prices: kept local, not published with the site
 outreach/
+
+# payment secrets for Supabase Edge Functions: never commit
+supabase/functions/.env
+.env
+supabase/.temp/
