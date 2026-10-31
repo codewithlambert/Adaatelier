@@ -45,6 +45,9 @@ type Tracked = {
   discount: number;
   shipping: number;
   total: number;
+  /** what arrived and in which currency (naira for Bachs) */
+  currency: string | null;
+  paid_amount: number | null;
   city: string | null;
   name: string;
   /** written by the store in the admin */
@@ -146,7 +149,13 @@ function TrackPage() {
       label: "Payment confirmed",
       at: order.paid_at,
       done: !!order.paid_at || order.status !== "pending",
-      note: order.paid_at ? `Paid with ${order.payment_method}` : undefined,
+      note: order.paid_at
+        ? `${
+            order.paid_amount !== null && order.currency
+              ? formatIn(Number(order.paid_amount), order.currency, 1)
+              : usd(order.total)
+          } paid with ${order.payment_method}`
+        : undefined,
     },
     {
       label: "Being prepared",
@@ -300,6 +309,14 @@ function TrackPage() {
                 <dt>Total</dt>
                 <dd className="tabular-nums">{usd(order.total)}</dd>
               </div>
+              {order.paid_amount !== null && order.currency && order.currency !== "USD" && (
+                <div className="flex justify-between text-sm">
+                  <dt className="text-muted-foreground">Paid</dt>
+                  <dd className="tabular-nums">
+                    {formatIn(Number(order.paid_amount), order.currency, 1)}
+                  </dd>
+                </div>
+              )}
             </dl>
             {order.city && (
               <p className="mt-6 text-xs text-muted-foreground">Delivering to {order.city}</p>

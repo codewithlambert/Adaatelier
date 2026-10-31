@@ -83,20 +83,26 @@ Deno.serve(async (req) => {
   }
 
   // find the order by its id, or by the checkout session we stored when payment started
-  const query = db.from("orders").select("id, total, paid_at, payment_ref");
+  const query = db
+    .from("orders")
+    .select("id, total, paid_at, payment_ref, charge_currency, charge_amount");
   const { data: order } = await (
     orderId ? query.eq("id", orderId) : query.eq("payment_ref", ref ?? "")
   ).maybeSingle();
   if (!order) return new Response("Unknown order", { status: 404 });
   if (order.paid_at) return new Response("already paid"); // retries are normal
 
-  // Stripe charges exactly the order total in USD. Bachs may settle in naira at the live rate,
-  // so its amount is only compared when it reports dollars.
-  if (currency === "USD" && Math.abs(amount - Number(order.total)) > 0.01) {
+  // compare against what the payment page asked for: dollars for Stripe, naira for Bachs
+  const expected =
+    order.charge_currency && order.charge_amount !== null
+      ? { currency: String(order.charge_currency), amount: Number(order.charge_amount) }
+      : { currency: "USD", amount: Number(order.total) };
+  const tolerance = expected.currency === "USD" ? 0.01 : 1;
+  if (currency === expected.currency && Math.abs(amount - expected.amount) > tolerance) {
     await db.from("notifications").insert({
       kind: "system",
       title: `Payment mismatch on ${order.id}`,
-      body: `${provider} reported $${amount.toFixed(2)}, order total is $${Number(order.total).toFixed(2)}`,
+      body: `${provider} reported ${currency} ${amount.toFixed(2)}, expected ${expected.currency} ${expected.amount.toFixed(2)}`,
       link: "/#/orders",
     });
     return new Response("amount mismatch", { status: 200 });
@@ -110,6 +116,7 @@ Deno.serve(async (req) => {
       payment_method: provider,
       payment_ref: ref ?? order.payment_ref,
       currency,
+      paid_amount: amount,
     })
     .eq("id", order.id)
     .is("paid_at", null);
@@ -119,7 +126,7 @@ Deno.serve(async (req) => {
   await db.from("notifications").insert({
     kind: "order",
     title: `Order ${order.id} paid`,
-    body: `${provider} · ${currency} ${amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}`,
+    body: `${provider} · ${paidLabel(amount, currency)}`,
     link: "/#/orders",
   });
 
@@ -146,6 +153,20 @@ type Db = ReturnType<typeof createClient>;
 type Line = { product_name: string; qty: number; unit_price: number; color: string; monogram: string | null };
 
 const money = (n: number) => `$${Number(n).toFixed(2)}`;
+/** "₦514,000" or "$331.00" */
+function paidLabel(amount: number, currency: string) {
+  if (currency === "USD") return money(amount);
+  try {
+    return new Intl.NumberFormat("en", {
+      style: "currency",
+      currency,
+      currencyDisplay: "narrowSymbol",
+      maximumFractionDigits: 0,
+    }).format(amount);
+  } catch {
+    return `${currency} ${amount.toLocaleString("en-US")}`;
+  }
+}
 const esc = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
@@ -156,7 +177,7 @@ async function sendConfirmation(db: Db, id: string) {
   const { data: o } = await db
     .from("orders")
     .select(
-      "id, subtotal, discount, shipping, total, track_token, confirmation_sent_at, payment_method, customers(name, email), order_items(product_name, qty, unit_price, color, monogram)",
+      "id, subtotal, discount, shipping, total, currency, paid_amount, track_token, confirmation_sent_at, payment_method, customers(name, email), order_items(product_name, qty, unit_price, color, monogram)",
     )
     .eq("id", id)
     .single();
@@ -201,7 +222,8 @@ async function sendConfirmation(db: Db, id: string) {
             ${total("Subtotal", money(o.subtotal))}
             ${Number(o.discount) > 0 ? total("Discount", `−${money(o.discount)}`) : ""}
             ${total("Shipping", Number(o.shipping) ? money(o.shipping) : "Free")}
-            ${total("Total paid", money(o.total), true)}
+            ${total("Total", money(o.total), o.currency === "USD" || !o.paid_amount)}
+            ${o.currency !== "USD" && o.paid_amount ? total("Total paid", paidLabel(Number(o.paid_amount), String(o.currency)), true) : ""}
           </table>
         </td></tr>
         <tr><td style="padding-top:32px;font-size:12px;line-height:1.6;color:#8a857d">

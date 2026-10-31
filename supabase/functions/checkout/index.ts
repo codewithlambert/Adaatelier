@@ -63,10 +63,37 @@ async function stripeSession(order: Order, site: string) {
   });
   const json = await res.json();
   if (!res.ok) throw new Error(json?.error?.message ?? "Stripe error");
-  return { url: json.url as string, ref: json.id as string };
+  return {
+    url: json.url as string,
+    ref: json.id as string,
+    charge: { currency: "USD", amount: Number(order.total) },
+  };
+}
+
+/**
+ * Naira per dollar: the same live rate the shop shows prices at (open.er-api.com), so the shopper
+ * pays the naira figure they saw. NGN_RATE (a secret) can pin it instead.
+ */
+async function nairaRate(): Promise<number | null> {
+  const pinned = Number(env("NGN_RATE"));
+  if (pinned > 0) return pinned;
+  try {
+    const res = await fetch("https://open.er-api.com/v6/latest/USD");
+    const j = await res.json();
+    const ngn = Number(j?.rates?.NGN);
+    return j?.result === "success" && ngn > 0 ? ngn : null;
+  } catch {
+    return null;
+  }
 }
 
 async function bachsSession(order: Order, site: string) {
+  // charge in naira so Bachs shows ₦; if the rate can't be fetched, fall back to dollars and let
+  // Bachs convert, rather than failing the checkout
+  const rate = await nairaRate();
+  const charge = rate
+    ? { currency: "NGN", amount: Math.ceil(Number(order.total) * rate) }
+    : { currency: "USD", amount: Number(order.total) };
   const res = await fetch(
     `${env("BACHS_API_URL") || "https://sandbox-api.bachs.io"}/v1/checkout-sessions`,
     {
@@ -77,8 +104,7 @@ async function bachsSession(order: Order, site: string) {
         "Idempotency-Key": `checkout-${order.id}-${Math.floor(Date.now() / 60000)}`,
       },
       body: JSON.stringify({
-        // priced in dollars; Bachs shows the shopper the naira amount at the live rate
-        pricing: { currency: "USD", amount: Number(order.total).toFixed(2) },
+        pricing: { currency: charge.currency, amount: charge.amount.toFixed(2) },
         customer: { email: order.customers?.email, name: order.customers?.name },
         metadata: { order_id: order.id },
         success_url: trackUrl(site, order),
@@ -88,7 +114,7 @@ async function bachsSession(order: Order, site: string) {
   );
   const json = await res.json();
   if (!res.ok) throw new Error(json?.error?.message ?? json?.message ?? "Bachs error");
-  return { url: json.checkout_url as string, ref: json.checkout_id as string };
+  return { url: json.checkout_url as string, ref: json.checkout_id as string, charge };
 }
 
 Deno.serve(async (req) => {
@@ -125,9 +151,14 @@ Deno.serve(async (req) => {
       provider === "Bachs" ? await bachsSession(order, site) : await stripeSession(order, site);
     await db
       .from("orders")
-      .update({ payment_method: provider, payment_ref: session.ref })
+      .update({
+        payment_method: provider,
+        payment_ref: session.ref,
+        charge_currency: session.charge.currency,
+        charge_amount: session.charge.amount,
+      })
       .eq("id", order.id);
-    return reply({ url: session.url, provider });
+    return reply({ url: session.url, provider, charge: session.charge });
   } catch (e) {
     console.error(provider, e);
     return reply({ error: "We couldn't open the payment page. Please try again." }, 502);

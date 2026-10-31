@@ -114,6 +114,10 @@ alter table public.orders add column if not exists courier text;
 alter table public.orders add column if not exists confirmation_sent_at timestamptz;
 -- optional note to this customer, shown on their tracking page under the current step
 alter table public.orders add column if not exists status_note text;
+-- what the payment page asked for (naira for Bachs, dollars for Stripe) and what actually arrived
+alter table public.orders add column if not exists charge_currency text;
+alter table public.orders add column if not exists charge_amount numeric(14, 2);
+alter table public.orders add column if not exists paid_amount numeric(14, 2);
 alter table public.orders add column if not exists currency text not null default 'USD';
 create index if not exists orders_created_idx on public.orders (created_at desc);
 create index if not exists orders_status_idx on public.orders (status);
@@ -410,6 +414,8 @@ language sql stable security definer set search_path = '' as $$
     'discount', o.discount,
     'shipping', o.shipping,
     'total', o.total,
+    'currency', o.currency,
+    'paid_amount', o.paid_amount,
     'city', o.city,
     'name', c.name,
     'status_note', o.status_note,
