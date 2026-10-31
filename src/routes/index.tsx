@@ -204,8 +204,8 @@ function Index() {
           </div>
           <div data-fade className="max-w-sm md:justify-self-end">
             <p className="text-sm leading-relaxed text-muted-foreground">
-              We researched materials that can be used as packaging and are kind to the environment.
-              Every Ada Atelier bag now ships in one.
+              Every bag leaves our Lagos workshop in a recyclable box, wrapped with an offcut of its
+              own cloth and a card signed by the person who made it.
             </p>
             <Link to="/about" hash="eco" className="link-line mt-5 inline-block text-[13px]">
               Our story

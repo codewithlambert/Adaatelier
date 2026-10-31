@@ -4,8 +4,8 @@ import { ArrowRight } from "lucide-react";
 import { PageHeader, Words } from "@/components/site/Words";
 import { LogoMark } from "@/components/site/Logo";
 import { useReveal } from "@/hooks/use-reveal";
-import hero from "@/assets/hero.jpg";
-import bag3 from "@/assets/bag3.jpg";
+import ankaraTote from "@/assets/ankara-tote.jpg";
+import ankaraShopper from "@/assets/ankara-shopper.jpg";
 import box from "@/assets/box.jpg";
 
 export const Route = createFileRoute("/about")({
@@ -15,7 +15,7 @@ export const Route = createFileRoute("/about")({
       {
         name: "description",
         content:
-          "Why Ada Atelier makes premium, durable bags and ships them in eco-friendly packaging.",
+          "Ada Atelier is a Lagos bag house: wax print, mud cloth and leather, made by hand in Nigeria and shipped to your door in the US and worldwide.",
       },
     ],
   }),
@@ -25,9 +25,17 @@ export const Route = createFileRoute("/about")({
 const wrap = "mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12";
 
 const values = [
-  ["01", "Premium materials", "Selected to last a long time and survive damage."],
-  ["02", "Recyclable boxes", "Packaging made from responsibly sourced card."],
-  ["03", "Made to order", "Customised by hand, finished with your monogram."],
+  [
+    "01",
+    "Made in Lagos",
+    "Cut and sewn by hand by makers we know by name, paid fairly for every piece.",
+  ],
+  [
+    "02",
+    "Real African cloth",
+    "Wax print from Lagos markets and mud cloth from Mali, never printed copies.",
+  ],
+  ["03", "Shipped to the US", "Tracked delivery, duties shown at checkout, 30-day returns."],
 ];
 
 function About() {
@@ -38,15 +46,15 @@ function About() {
     <div ref={root}>
       <PageHeader
         eyebrow="Our story"
-        lines={["Be stylish", "& _modish"]}
-        intro="Ada Atelier started with one idea: a bag should look as good in five years as it does on the first day."
+        lines={["Made in Lagos", "carried _everywhere"]}
+        intro="In Igbo, Ada means first daughter: the one who leads, carries the family and keeps its stories. We make bags in her image."
       />
 
       <div className={wrap}>
         <div data-parallax className="overflow-hidden bg-surface">
           <img
-            src={hero}
-            alt="Ada Atelier tote"
+            src={ankaraTote}
+            alt="Ankara Tote No. 007 in a plum diamond wax print"
             className="aspect-[4/5] w-full scale-110 object-cover md:aspect-[21/9]"
           />
         </div>
@@ -54,23 +62,26 @@ function About() {
 
       <section className={`${wrap} grid gap-10 py-24 md:grid-cols-2 md:gap-20 md:py-36`}>
         <h2 data-reveal className="headline text-5xl md:text-7xl">
-          <Words lines={["Made to be", "_carried"]} />
+          <Words lines={["From the market", "to your _shoulder"]} />
         </h2>
         <div
           data-fade
           className="space-y-5 text-sm leading-relaxed text-muted-foreground md:max-w-md"
         >
           <p>
-            We always give the best for the products we produce. Every Ada Atelier bag is cut from
-            premium materials chosen to last a long time and survive the knocks of everyday life.
+            Every Ada Atelier bag starts in Lagos. Our makers choose wax print by the bolt at the
+            markets, the same cloth our mothers wore to weddings and Sunday service, and pair it
+            with good leather and solid brass.
           </p>
           <p>
-            Our shapes are simple on purpose. Clean lines, tonal hardware and quiet branding mean
-            the bag works with what you already own, season after season.
+            Some pieces go further: mud cloth hand-painted in Mali, and Aso-oke woven on narrow
+            looms in the southwest. Each one is cut by hand, so the print falls a little differently
+            on every bag. That is the point.
           </p>
           <p>
-            And because no two people carry the same things, most of our pieces can be customised
-            with your colour and your initials.
+            The shapes stay simple on purpose. Clean lines and quiet hardware let the cloth talk,
+            and the bag works with what you already own, whether you live in Lagos, London or Los
+            Angeles. Most pieces can carry your initials too.
           </p>
         </div>
       </section>
@@ -92,9 +103,9 @@ function About() {
               <Words lines={["Eco-friendly", "_packing"]} />
             </h2>
             <p data-fade className="mt-8 max-w-md text-sm leading-relaxed text-muted-foreground">
-              We researched materials that can be used as packaging and are kind to the environment.
-              Every order now ships in a recyclable Ada Atelier box with plastic-free tissue, ready
-              to be reused or recycled.
+              Every order leaves Lagos in a recyclable Ada Atelier box, wrapped in plastic-free
+              tissue with an offcut of the bag's own cloth and a card signed by the person who made
+              it. Keep the box, reuse the cloth.
             </p>
           </div>
         </div>
@@ -115,7 +126,7 @@ function About() {
           <div>
             <LogoMark className="h-10 w-10" />
             <h2 data-reveal className="headline mt-8 text-5xl md:text-7xl">
-              <Words lines={["Find yours"]} />
+              <Words lines={["Find your _print"]} />
             </h2>
             <Link
               data-magnetic
@@ -126,7 +137,11 @@ function About() {
             </Link>
           </div>
           <div data-img-reveal className="overflow-hidden bg-surface">
-            <img src={bag3} alt="Flap Bag No. 003" className="aspect-[4/5] w-full object-cover" />
+            <img
+              src={ankaraShopper}
+              alt="Ankara Shopper No. 006 in an indigo wax print"
+              className="aspect-[4/5] w-full object-cover"
+            />
           </div>
         </div>
       </section>

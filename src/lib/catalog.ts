@@ -23,6 +23,14 @@ import hero3dBody from "@/assets/hero-3d-body.png";
 import blog13d from "@/assets/blog1-3d.png";
 import blog13dMask from "@/assets/blog1-3d-mask.png";
 import blog13dBody from "@/assets/blog1-3d-body.png";
+import ankaraShopper from "@/assets/ankara-shopper.jpg";
+import ankaraShopper3d from "@/assets/ankara-shopper-3d.png";
+import ankaraTote from "@/assets/ankara-tote.jpg";
+import ankaraTote3d from "@/assets/ankara-tote-3d.png";
+import ankaraSaddle from "@/assets/ankara-saddle.jpg";
+import ankaraSaddle3d from "@/assets/ankara-saddle-3d.png";
+import mudclothBackpack from "@/assets/mudcloth-backpack.jpg";
+import mudclothBackpack3d from "@/assets/mudcloth-backpack-3d.png";
 
 /** Colourways. Onyx is the photographed original; the rest are tinted onto the bag mask. */
 export const bagColors = [
@@ -52,6 +60,8 @@ export type BagModel = {
   depth: number;
   /** monogram centre as fractions of the cut-out */
   monogram: [x: number, y: number];
+  /** side-wall colour for printed bags, which aren't tinted to a colourway */
+  wall?: string;
 };
 
 export type Product = {
@@ -210,6 +220,109 @@ export const products: Product[] = [
       "Water-resistant nylon",
       "Padded 15-inch laptop sleeve",
       "Front zip pocket",
+      "Capacity 18 L",
+    ],
+  },
+  {
+    slug: "ankara-shopper-006",
+    name: "Ankara Shopper No. 006",
+    price: 64,
+    cat: "Ankara",
+    img: ankaraShopper,
+    model: {
+      src: ankaraShopper3d,
+      mask: bag23dMask,
+      body: bag23dBody,
+      aspect: 349 / 640,
+      depth: 10,
+      monogram: [0.5, 0.66],
+      wall: "#1d2a6e",
+    },
+    tagline: "Indigo wax print, sun rings in mustard and teal.",
+    description:
+      "Our everyday shopper in a heavy cotton wax print, the kind sold by the bolt in Lagos markets. Each panel is cut by hand, so the rings fall a little differently on every bag.",
+    details: [
+      "100% cotton wax print, lined in canvas",
+      "Handmade in Lagos, Nigeria",
+      "Reinforced handles, fits a 14-inch laptop",
+      "W 38 × H 42 cm",
+    ],
+    isNew: true,
+  },
+  {
+    slug: "ankara-tote-007",
+    name: "Ankara Tote No. 007",
+    price: 89,
+    cat: "Ankara",
+    img: ankaraTote,
+    model: {
+      src: ankaraTote3d,
+      mask: hero3dMask,
+      body: hero3dBody,
+      aspect: 491 / 607,
+      depth: 44,
+      monogram: [0.5, 0.72],
+      wall: "#5b1a3a",
+    },
+    focus: "50% 70%",
+    tagline: "Plum print with nested diamonds, leather trim.",
+    description:
+      "The structured tote, wrapped in a plum wax print of nested diamonds and finished with leather edges. Bold enough for the weekend, neat enough for the office.",
+    details: [
+      "Cotton wax print over a leather base",
+      "Handmade in Lagos, Nigeria",
+      "Angled side gussets, interior slip pocket",
+      "W 34 × H 28 × D 14 cm",
+    ],
+    isNew: true,
+  },
+  {
+    slug: "ankara-saddle-008",
+    name: "Ankara Saddle No. 008",
+    price: 79,
+    cat: "Ankara",
+    img: ankaraSaddle,
+    model: {
+      src: ankaraSaddle3d,
+      mask: bag33dMask,
+      body: bag33dBody,
+      aspect: 374 / 640,
+      depth: 30,
+      monogram: [0.5, 0.9],
+      wall: "#f2e4c4",
+    },
+    tagline: "Rainbow fans on cream, tan leather strap.",
+    description:
+      "Our signature saddle flap, made in a cream wax print of stacked fans. The tan strap and brushed-gold lock keep it grown-up.",
+    details: [
+      "Cotton wax print, smooth leather trim",
+      "Handmade in Lagos, Nigeria",
+      "Adjustable tan strap, brushed-gold lock",
+      "W 26 × H 18 × D 8 cm",
+    ],
+  },
+  {
+    slug: "mudcloth-backpack-009",
+    name: "Mud Cloth Backpack No. 009",
+    price: 98,
+    cat: "African Craft",
+    img: mudclothBackpack,
+    model: {
+      src: mudclothBackpack3d,
+      mask: blog13dMask,
+      body: blog13dBody,
+      aspect: 459 / 632,
+      depth: 60,
+      monogram: [0.62, 0.55],
+      wall: "#3b2418",
+    },
+    tagline: "Hand-painted mud cloth from Mali.",
+    description:
+      "A daypack faced in bògòlanfini, the cotton cloth Malian artisans dye with leaves and paint with fermented river mud. No two bolts match, so no two bags do either.",
+    details: [
+      "Hand-dyed cotton mud cloth, nylon lining",
+      "Cloth from Mali, sewn in Lagos",
+      "Padded 15-inch laptop sleeve",
       "Capacity 18 L",
     ],
   },

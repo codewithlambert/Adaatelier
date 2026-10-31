@@ -210,7 +210,7 @@ export function ExtrudedBag({ model, color, h, monogram, anchor = "center" }: Ex
   const depth = (model.depth * h) / 420;
   const step = depth / (layers - 1);
   const top = anchor === "center" ? -h / 2 : -h;
-  const hex = bagColors.find((c) => c.id === color)?.hex ?? "#151515";
+  const hex = model.wall ?? bagColors.find((c) => c.id === color)?.hex ?? "#151515";
   const plane = (z: number, extra = ""): CSSProperties => ({
     width: w,
     height: h,

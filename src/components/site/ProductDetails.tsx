@@ -73,7 +73,7 @@ export function ProductDetails({ product: base, initialColor = "onyx", onColorCh
         img: p.img,
         mask: p.mask,
         color,
-        note: `${p.cat} · ${colorName(color)}`,
+        note: p.mask ? `${p.cat} · ${colorName(color)}` : p.cat,
       },
       qty,
       false,

@@ -27,7 +27,7 @@ export function ProductCard({ p: base }: { p: Product }) {
         img: p.img,
         mask: p.mask,
         color,
-        note: `${p.cat} · ${colorName(color)}`,
+        note: p.mask ? `${p.cat} · ${colorName(color)}` : p.cat,
       },
       1,
       false,
@@ -109,9 +109,11 @@ export function ProductCard({ p: base }: { p: Product }) {
         ) : (
           <span className="text-[11px] text-muted-foreground">{p.cat}</span>
         )}
-        <span className="hidden text-[11px] text-muted-foreground sm:inline">
-          {colorName(color)}
-        </span>
+        {p.mask && (
+          <span className="hidden text-[11px] text-muted-foreground sm:inline">
+            {colorName(color)}
+          </span>
+        )}
       </div>
     </article>
   );
