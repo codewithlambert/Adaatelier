@@ -19,8 +19,14 @@ const navLinks = [
   { to: "/journal", label: "Journal" },
 ] as const;
 
-/** Header, footer, preloader, cursor, mobile dock, search and bag — shared by every page. */
+/** Storefront chrome for every page except the admin, which brings its own shell. */
 export function SiteLayout({ children }: { children: ReactNode }) {
+  const path = useRouterState({ select: (s) => s.location.pathname });
+  return path.startsWith("/admin") ? <>{children}</> : <Storefront>{children}</Storefront>;
+}
+
+/** Header, footer, preloader, cursor, mobile dock, search and bag. */
+function Storefront({ children }: { children: ReactNode }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const { hidden, scrolled } = useScrollDirection();
   const path = useRouterState({ select: (s) => s.location.pathname });
