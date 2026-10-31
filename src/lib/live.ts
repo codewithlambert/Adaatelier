@@ -86,7 +86,6 @@ export function useLiveProduct(p: Product) {
   };
 }
 
-
 /** A product added in the admin (no bundled photo, mask or 3D model): shown from its uploaded photo. */
 function fromRow(r: LiveProduct): Product | null {
   if (!r.image_url) return null;
