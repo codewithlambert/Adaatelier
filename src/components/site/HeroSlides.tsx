@@ -138,21 +138,25 @@ export function HeroControls({
         ))}
       </div>
       {p && (
+        // a solid pill with an arrow button, so it reads as "go to this bag" and not a caption
         <Link
           key={p.slug}
           to="/product/$slug"
           params={{ slug: p.slug }}
-          className="group mt-1 flex items-baseline justify-between gap-4 text-[13px] animate-in fade-in slide-in-from-bottom-2 duration-700"
+          aria-label={`View ${p.name}, ${money(p.price)}`}
+          className="glass group mt-2 flex items-center justify-between gap-4 rounded-full py-1.5 pl-5 pr-1.5 text-[13px] animate-in fade-in slide-in-from-bottom-2 duration-700 active:scale-[0.98]"
         >
-          <span>
+          <span className="min-w-0 truncate">
             <span className="tabular-nums text-foreground/50">
               {String(active + 1).padStart(2, "0")} / {String(heroSlides.length).padStart(2, "0")}
             </span>
-            <span className="ml-3">{p.name}</span>
+            <span className="ml-3 font-medium">{p.name}</span>
           </span>
-          <span className="flex items-center gap-1 tabular-nums text-foreground/70">
+          <span className="flex shrink-0 items-center gap-3 tabular-nums">
             {money(p.price)}
-            <ArrowUpRight className="h-3.5 w-3.5 transition-transform duration-500 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+            <span className="grid h-9 w-9 place-items-center rounded-full bg-foreground text-background transition-transform duration-500 group-hover:rotate-45">
+              <ArrowUpRight className="h-4 w-4" />
+            </span>
           </span>
         </Link>
       )}
