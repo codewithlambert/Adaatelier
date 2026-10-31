@@ -157,7 +157,7 @@ export function SurpriseBox() {
 
       <div
         data-sb-glow
-        className="pointer-events-none absolute left-1/2 top-[55%] h-[70vmin] w-[70vmin] -translate-x-1/2 -translate-y-1/2 rounded-full bg-card opacity-0 blur-3xl"
+        className="pointer-events-none absolute left-1/2 top-[55%] h-[70vmin] w-[70vmin] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(closest-side,var(--color-card),transparent)] opacity-0"
       />
 
       {/* 3D stage: the 1px origin sits at the centre of the box's base */}

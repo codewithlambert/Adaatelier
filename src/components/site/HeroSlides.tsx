@@ -83,12 +83,17 @@ export function HeroMedia({ active }: { active: number }) {
           </div>
           {/* the bag in front: below the header pill, and above the headline on phones */}
           <div className="absolute inset-x-0 bottom-[42%] top-24 md:bottom-[3%] md:top-[13%]">
+            {/* static floor shadow: a soft gradient is far cheaper than a drop-shadow filter on a moving image */}
+            <span
+              aria-hidden
+              className="absolute bottom-[-2%] left-1/2 h-[7%] w-[46%] -translate-x-1/2 rounded-[50%] bg-[radial-gradient(closest-side,rgb(0_0_0/0.28),transparent)] md:w-[30%]"
+            />
             <img
               data-hero-img={i === 0 ? "" : undefined}
               src={s.cut}
               alt={s.alt}
               loading={i === 0 ? "eager" : "lazy"}
-              className="absolute left-1/2 top-0 h-full w-auto max-w-none -translate-x-1/2 object-contain drop-shadow-[0_40px_45px_rgb(0_0_0/0.22)]"
+              className="absolute left-1/2 top-0 h-full w-auto max-w-none -translate-x-1/2 object-contain"
             />
           </div>
         </div>

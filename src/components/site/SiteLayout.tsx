@@ -64,26 +64,6 @@ export function SiteLayout({ children }: { children: ReactNode }) {
           onUpdate: (self) => gsap.set("[data-progress]", { scaleX: self.progress }),
         });
 
-        // grids lean into fast scrolls, then settle
-        const clampSkew = gsap.utils.clamp(-5, 5);
-        const proxy = { skew: 0 };
-        const applySkew = () => gsap.set("[data-skew]", { skewY: proxy.skew, force3D: true });
-        ScrollTrigger.create({
-          onUpdate: (self) => {
-            const skew = clampSkew(self.getVelocity() / -400);
-            if (Math.abs(skew) > Math.abs(proxy.skew)) {
-              proxy.skew = skew;
-              gsap.to(proxy, {
-                skew: 0,
-                duration: 0.8,
-                ease: "power3",
-                overwrite: true,
-                onUpdate: applySkew,
-              });
-            }
-          },
-        });
-
         // footer mark tumbles in
         gsap.from("[data-foot-mark]", {
           yPercent: 30,

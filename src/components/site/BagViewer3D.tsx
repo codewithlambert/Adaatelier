@@ -6,6 +6,19 @@ import { bagColors, type BagModel, type ColorId } from "@/lib/catalog";
 import { prefersReducedMotion } from "@/lib/motion";
 
 const LAYERS = 24;
+// phones and low-core devices get a lighter extrusion
+const LITE_LAYERS = 12;
+
+/** True on touch-first or low-core devices, decided after mount so server and client HTML match. */
+function useLowPower() {
+  const [low, setLow] = useState(false);
+  useEffect(() => {
+    setLow(
+      window.matchMedia("(pointer: coarse)").matches || (navigator.hardwareConcurrency ?? 8) <= 4,
+    );
+  }, []);
+  return low;
+}
 const REST_TILT = -6;
 
 /** Darkens a #rrggbb colour for the side walls of the extrusion. */
@@ -47,10 +60,13 @@ export function BagViewer3D({ model, color, label, monogram, className = "" }: P
     return () => ro.disconnect();
   }, [model.aspect]);
 
-  // render loop: momentum after a drag, gentle auto-spin when idle, tilt eases back to rest
+  // render loop: momentum after a drag, gentle auto-spin when idle, tilt eases back to rest.
+  // It only runs while the viewer is on screen.
   useEffect(() => {
     const auto = !prefersReducedMotion();
     let raf = 0;
+    let running = false;
+    let litAt = Number.NaN;
     const tick = (t: number) => {
       const s = state.current;
       if (!s.dragging) {
@@ -65,7 +81,9 @@ export function BagViewer3D({ model, color, label, monogram, className = "" }: P
       const c = Math.cos(r);
       const sn = Math.sin(r);
       const el = box.current;
-      if (el) {
+      // re-light only after a noticeable turn: every update re-filters each layer
+      if (el && !(Math.abs(s.y - litAt) < 1.5)) {
+        litAt = s.y;
         el.style.setProperty("--front", (0.78 + 0.24 * Math.max(c, 0)).toFixed(3));
         el.style.setProperty("--back", (0.5 + 0.22 * Math.max(-c, 0)).toFixed(3));
         el.style.setProperty("--wall", (0.72 + 0.55 * Math.abs(sn)).toFixed(3));
@@ -74,8 +92,23 @@ export function BagViewer3D({ model, color, label, monogram, className = "" }: P
       }
       raf = requestAnimationFrame(tick);
     };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    const start = () => {
+      if (running) return;
+      running = true;
+      raf = requestAnimationFrame(tick);
+    };
+    const stop = () => {
+      running = false;
+      cancelAnimationFrame(raf);
+    };
+    const io = new IntersectionObserver(([e]) => (e?.isIntersecting ? start() : stop()), {
+      rootMargin: "100px",
+    });
+    if (box.current) io.observe(box.current);
+    return () => {
+      io.disconnect();
+      stop();
+    };
   }, []);
 
   const onDown = (e: React.PointerEvent) => {
@@ -172,9 +205,10 @@ type ExtrudedBagProps = {
  * between them. Render inside a `preserve-3d` parent.
  */
 export function ExtrudedBag({ model, color, h, monogram, anchor = "center" }: ExtrudedBagProps) {
+  const layers = useLowPower() ? LITE_LAYERS : LAYERS;
   const w = Math.round(h * model.aspect);
   const depth = (model.depth * h) / 420;
-  const step = depth / (LAYERS - 1);
+  const step = depth / (layers - 1);
   const top = anchor === "center" ? -h / 2 : -h;
   const hex = bagColors.find((c) => c.id === color)?.hex ?? "#151515";
   const plane = (z: number, extra = ""): CSSProperties => ({
@@ -194,7 +228,7 @@ export function ExtrudedBag({ model, color, h, monogram, anchor = "center" }: Ex
   const body = maskOf(model.body);
   // walls: lighter near the two faces, darker in the middle, and bulging slightly like a stuffed bag
   const wall = (i: number): CSSProperties => {
-    const t = (i + 1) / (LAYERS - 1);
+    const t = (i + 1) / (layers - 1);
     const bulge = 1 + 0.025 * Math.sin(Math.PI * t);
     return {
       ...plane(-depth / 2 + step * (i + 1), ` scale(${bulge.toFixed(4)})`),
@@ -227,7 +261,7 @@ export function ExtrudedBag({ model, color, h, monogram, anchor = "center" }: Ex
         {photo}
       </div>
       {/* side walls */}
-      {Array.from({ length: LAYERS - 2 }, (_, i) => (
+      {Array.from({ length: layers - 2 }, (_, i) => (
         <div key={i} className="face" style={wall(i)} />
       ))}
       {/* front */}

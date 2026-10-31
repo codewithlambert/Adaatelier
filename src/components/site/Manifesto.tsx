@@ -98,11 +98,11 @@ export function Manifesto() {
       <div aria-hidden className="pointer-events-none absolute inset-0">
         <div
           data-mf-glow-a
-          className="absolute left-[10%] top-[15%] h-[55vmax] w-[55vmax] rounded-full bg-[radial-gradient(closest-side,rgb(205_183_150/0.22),transparent)] blur-2xl"
+          className="absolute left-[10%] top-[15%] h-[55vmax] w-[55vmax] rounded-full bg-[radial-gradient(closest-side,rgb(205_183_150/0.22),transparent)]"
         />
         <div
           data-mf-glow-b
-          className="absolute bottom-[-10%] right-[5%] h-[45vmax] w-[45vmax] rounded-full bg-[radial-gradient(closest-side,rgb(154_83_40/0.18),transparent)] blur-2xl"
+          className="absolute bottom-[-10%] right-[5%] h-[45vmax] w-[45vmax] rounded-full bg-[radial-gradient(closest-side,rgb(154_83_40/0.18),transparent)]"
         />
         <div
           data-mf-outline

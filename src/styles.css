@@ -359,3 +359,15 @@
     transform: scaleX(1);
   }
 }
+
+/* Touch devices (most Android phones): skip the full-screen grain and use cheaper glass */
+@media (pointer: coarse) {
+  .grain {
+    display: none;
+  }
+  .glass {
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    background: color-mix(in oklab, var(--color-card) 78%, transparent);
+  }
+}
