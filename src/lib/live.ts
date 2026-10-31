@@ -2,7 +2,13 @@
 // availability and colourways. Loaded once per visit on the client; the bundled catalogue
 // stays the fallback whenever the database isn't reachable.
 import { useEffect, useState } from "react";
-import { bagColors, type ColorId, type Product } from "@/lib/catalog";
+import {
+  bagColors,
+  products as bundled,
+  type Category,
+  type ColorId,
+  type Product,
+} from "@/lib/catalog";
 import { supabase } from "@/lib/supabase";
 
 export type LiveSettings = {
@@ -10,7 +16,22 @@ export type LiveSettings = {
   announcement_enabled: boolean;
   announcement: string;
 };
-type LiveProduct = { id: string; name: string; price: number; stock: number; colors: string[] };
+type LiveProduct = {
+  id: string;
+  name: string;
+  category: string;
+  price: number;
+  stock: number;
+  colors: string[];
+  image_url: string | null;
+  focus: string | null;
+  tagline: string;
+  description: string;
+  details: string[];
+  is_new: boolean;
+};
+const PRODUCT_COLUMNS =
+  "id, name, category, price, stock, colors, image_url, focus, tagline, description, details, is_new";
 type Live = { settings: LiveSettings | null; products: Record<string, LiveProduct> | null };
 
 let loading: Promise<Live> | undefined;
@@ -25,7 +46,7 @@ function load(): Promise<Live> {
         .eq("id", 1)
         .maybeSingle(),
       // shoppers can only read active products, so anything missing here is hidden
-      supabase.from("products").select("id, name, price, stock, colors"),
+      supabase.from("products").select(PRODUCT_COLUMNS).order("sort_order").order("created_at"),
     ]);
     return {
       settings: s.error ? null : (s.data as LiveSettings | null),
@@ -65,8 +86,44 @@ export function useLiveProduct(p: Product) {
   };
 }
 
-/** Drops products the admin has set to draft or archived (once the database answers). */
-export function useAvailable(list: Product[]) {
-  const products = useLive()?.products;
-  return products ? list.filter((p) => p.slug in products) : list;
+
+/** A product added in the admin (no bundled photo, mask or 3D model): shown from its uploaded photo. */
+function fromRow(r: LiveProduct): Product | null {
+  if (!r.image_url) return null;
+  return {
+    slug: r.id,
+    name: r.name,
+    price: Number(r.price),
+    cat: r.category as Category,
+    img: r.image_url,
+    tagline: r.tagline,
+    description: r.description,
+    details: r.details,
+    isNew: r.is_new,
+    ...(r.focus ? { focus: r.focus } : {}),
+  };
+}
+
+const bundledSlugs = new Set(bundled.map((p) => p.slug));
+
+/** The shop's catalogue: bundled bags the admin still has active, plus any added in the admin. */
+export function useCatalog(list: Product[]) {
+  const rows = useLive()?.products;
+  if (!rows) return list;
+  const extra = Object.values(rows)
+    .filter((r) => !bundledSlugs.has(r.id))
+    .map(fromRow)
+    .filter((p): p is Product => !!p);
+  return [...list.filter((p) => p.slug in rows), ...extra];
+}
+
+/** Looks up a product that only exists in the database (for direct links to its page). */
+export async function fetchDbProduct(slug: string): Promise<Product | undefined> {
+  if (!supabase) return undefined;
+  const { data } = await supabase
+    .from("products")
+    .select(PRODUCT_COLUMNS)
+    .eq("id", slug)
+    .maybeSingle();
+  return (data && fromRow(data as LiveProduct)) ?? undefined;
 }

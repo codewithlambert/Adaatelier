@@ -60,9 +60,10 @@ export type Product = {
   price: number;
   cat: Category;
   img: string;
-  /** RGBA mask of the recolourable bag body in `img` */
-  mask: string;
-  model: BagModel;
+  /** RGBA mask of the recolourable bag body in `img`; absent for photo-only products */
+  mask?: string;
+  /** 3D cut-out; absent for products added in the admin, which show as photos */
+  model?: BagModel;
   /** object-position for the card crop, so wide shots still centre the bag */
   focus?: string;
   tagline: string;
@@ -71,7 +72,16 @@ export type Product = {
   isNew?: boolean;
 };
 
-export const categories = ["Backpack", "Bucket Bag", "Flap Bag", "Shopper"] as const;
+export const categories = [
+  "Backpack",
+  "Bucket Bag",
+  "Flap Bag",
+  "Shopper",
+  "Tote",
+  "Ankara",
+  "African Craft",
+  "Designer",
+] as const;
 export type Category = (typeof categories)[number];
 
 export const products: Product[] = [
@@ -156,7 +166,7 @@ export const products: Product[] = [
     slug: "tote-004",
     name: "Tote No. 004",
     price: 39.99,
-    cat: "Shopper",
+    cat: "Tote",
     img: hero,
     mask: heroMask,
     model: {
@@ -274,3 +284,7 @@ export const posts: Post[] = [
 export const findPost = (slug: string) => posts.find((p) => p.slug === slug);
 
 export const money = (n: number) => `$${n.toFixed(2)}`;
+
+/** Products with a 3D cut-out: the ones the customizer, surprise box and hero can stage. */
+export type ModelledProduct = Product & { model: BagModel; mask: string };
+export const modelled = products.filter((p): p is ModelledProduct => !!p.model && !!p.mask);

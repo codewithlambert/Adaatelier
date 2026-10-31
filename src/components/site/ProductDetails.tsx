@@ -36,7 +36,7 @@ export function ProductDetails({ product: base, initialColor = "onyx", onColorCh
   // the 3D view leads; then the photo and a close-up crop of it
   const shots = [p.focus ?? "50% 50%", "50% 30%"];
 
-  const slides = ["3D view", "Photo", "Detail"];
+  const slides = p.model ? ["3D view", "Photo", "Detail"] : ["Photo", "Detail"];
   const [slide, setSlide] = useState(0);
   const goTo = (i: number) => {
     const el = gallery.current?.children[i] as HTMLElement | undefined;
@@ -90,14 +90,16 @@ export function ProductDetails({ product: base, initialColor = "onyx", onColorCh
           onScroll={onGalleryScroll}
           className="relative -mx-5 flex snap-x snap-mandatory scroll-px-5 gap-2 overflow-x-auto px-5 [scrollbar-width:none] md:mx-0 md:grid md:grid-cols-2 md:gap-3 md:overflow-visible md:px-0"
         >
-          <div className="relative w-[82%] shrink-0 snap-start bg-surface md:col-span-2 md:w-auto">
-            <BagViewer3D
-              model={p.model}
-              color={color}
-              label={`${p.name} in ${colorName(color)}`}
-              className="aspect-[4/5] w-full md:aspect-[5/4]"
-            />
-          </div>
+          {p.model && (
+            <div className="relative w-[82%] shrink-0 snap-start bg-surface md:col-span-2 md:w-auto">
+              <BagViewer3D
+                model={p.model}
+                color={color}
+                label={`${p.name} in ${colorName(color)}`}
+                className="aspect-[4/5] w-full md:aspect-[5/4]"
+              />
+            </div>
+          )}
           {shots.map((pos, i) => (
             <div
               key={pos}
@@ -159,18 +161,21 @@ export function ProductDetails({ product: base, initialColor = "onyx", onColorCh
           {p.description}
         </p>
 
-        <div data-fade className="mt-10 border-t pt-6">
-          <p className="text-xs text-muted-foreground">
-            Colour — <span className="text-foreground">{colorName(color)}</span>
-          </p>
-          <ColorSwatches
-            value={color}
-            onChange={pick}
-            allowed={colors}
-            className="mt-4"
-            size="lg"
-          />
-        </div>
+        {/* recolouring needs the bag mask, so photo-only products skip the picker */}
+        {p.mask && (
+          <div data-fade className="mt-10 border-t pt-6">
+            <p className="text-xs text-muted-foreground">
+              Colour — <span className="text-foreground">{colorName(color)}</span>
+            </p>
+            <ColorSwatches
+              value={color}
+              onChange={pick}
+              allowed={colors}
+              className="mt-4"
+              size="lg"
+            />
+          </div>
+        )}
 
         <div data-fade className="mt-8 flex flex-wrap items-center gap-3">
           <div className="flex h-12 items-center gap-5 border border-foreground/30 px-5 text-sm">

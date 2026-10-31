@@ -99,12 +99,16 @@ export function ProductCard({ p: base }: { p: Product }) {
         </span>
       </div>
       <div className="mt-2 flex items-center justify-between gap-2">
-        <ColorSwatches
-          value={color}
-          onChange={setColor}
-          allowed={colors}
-          className="-ml-1.5 !gap-0"
-        />
+        {p.mask ? (
+          <ColorSwatches
+            value={color}
+            onChange={setColor}
+            allowed={colors}
+            className="-ml-1.5 !gap-0"
+          />
+        ) : (
+          <span className="text-[11px] text-muted-foreground">{p.cat}</span>
+        )}
         <span className="hidden text-[11px] text-muted-foreground sm:inline">
           {colorName(color)}
         </span>

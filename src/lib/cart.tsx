@@ -20,7 +20,7 @@ export type CartLine = {
   qty: number;
   /** colourway + mask so the bag and checkout can show the tinted photo */
   color?: ColorId;
-  mask?: string;
+  mask?: string | undefined;
   /** up to three initials for made-to-order pieces */
   monogram?: string;
 };

@@ -3,7 +3,7 @@ import { Shuffle } from "lucide-react";
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { ExtrudedBag } from "@/components/site/BagViewer3D";
 import { LogoMark } from "@/components/site/Logo";
-import { bagColors, colorName, money, products, type ColorId } from "@/lib/catalog";
+import { bagColors, colorName, modelled as products, money, type ColorId } from "@/lib/catalog";
 import { useCart } from "@/lib/cart";
 import { flyToBag, loadGsap, prefersReducedMotion } from "@/lib/motion";
 

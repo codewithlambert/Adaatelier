@@ -6,14 +6,16 @@ import { Words } from "@/components/site/Words";
 import { useReveal } from "@/hooks/use-reveal";
 import { absoluteUrl } from "@/lib/site";
 import { bagColors, findProduct, products, type ColorId } from "@/lib/catalog";
+import { fetchDbProduct } from "@/lib/live";
 
 type ProductSearch = { color?: ColorId };
 
 export const Route = createFileRoute("/product/$slug")({
   validateSearch: (search: Record<string, unknown>): ProductSearch =>
     bagColors.some((c) => c.id === search["color"]) ? { color: search["color"] as ColorId } : {},
-  loader: ({ params }) => {
-    const product = findProduct(params.slug);
+  loader: async ({ params }) => {
+    // bundled bags first; anything else may have been added in the admin
+    const product = findProduct(params.slug) ?? (await fetchDbProduct(params.slug));
     if (!product) throw notFound();
     return product;
   },

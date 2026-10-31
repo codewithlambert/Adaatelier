@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 import { BagViewer3D } from "@/components/site/BagViewer3D";
 import { ColorSwatches } from "@/components/site/ColorSwatches";
 import { Words } from "@/components/site/Words";
-import { colorName, money, products, type ColorId } from "@/lib/catalog";
+import { colorName, modelled as products, money, type ColorId } from "@/lib/catalog";
 import { useCart } from "@/lib/cart";
 import { flyToBag } from "@/lib/motion";
 

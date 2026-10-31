@@ -44,7 +44,7 @@ end $$;
 create table if not exists public.products (
   id           text primary key,                       -- slug, e.g. flap-bag-003
   name         text not null,
-  category     text not null check (category in ('Backpack', 'Bucket Bag', 'Flap Bag', 'Shopper', 'Tote')),
+  category     text not null,
   price        numeric(10, 2) not null check (price >= 0),
   stock        integer not null default 0 check (stock >= 0),
   sold         integer not null default 0,
@@ -60,6 +60,10 @@ create table if not exists public.products (
   created_at   timestamptz not null default now(),
   updated_at   timestamptz not null default now()
 );
+-- category list lives in a named constraint so new categories can be added on re-run
+alter table public.products drop constraint if exists products_category_check;
+alter table public.products add constraint products_category_check
+  check (category in ('Backpack', 'Bucket Bag', 'Flap Bag', 'Shopper', 'Tote', 'Ankara', 'African Craft', 'Designer'));
 drop trigger if exists products_touch on public.products;
 create trigger products_touch before update on public.products
   for each row execute function public.touch_updated_at();

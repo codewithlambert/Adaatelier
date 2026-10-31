@@ -1,4 +1,4 @@
-import { findProduct } from "@/lib/catalog";
+import { modelled } from "@/lib/catalog";
 
 /** Hero slides: each bag's cut-out on its own backdrop, in front of a giant ADA wordmark. */
 const picks = [
@@ -9,5 +9,8 @@ const picks = [
   { slug: "backpack-005", bg: "#b9bfb6", alt: "Black nylon backpack" },
 ];
 
-export const heroSlides = picks.map((p) => ({ ...p, cut: findProduct(p.slug)!.model.src }));
+export const heroSlides = picks.map((p) => ({
+  ...p,
+  cut: modelled.find((m) => m.slug === p.slug)!.model.src,
+}));
 export const SLIDE_MS = 6000;
