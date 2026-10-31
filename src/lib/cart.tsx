@@ -11,6 +11,8 @@ import type { ColorId } from "@/lib/catalog";
 
 export type CartLine = {
   id: string;
+  /** catalogue slug; checkout sends this, never the price */
+  productId: string;
   name: string;
   price: number;
   img: string;
@@ -19,6 +21,8 @@ export type CartLine = {
   /** colourway + mask so the bag and checkout can show the tinted photo */
   color?: ColorId;
   mask?: string;
+  /** up to three initials for made-to-order pieces */
+  monogram?: string;
 };
 
 type CartState = {
@@ -45,7 +49,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) setLines(JSON.parse(saved) as CartLine[]);
+      // drop lines saved by older versions of the bag that lack a product id
+      if (saved) setLines((JSON.parse(saved) as CartLine[]).filter((l) => !!l.productId));
     } catch {
       // storage unavailable or corrupt: start empty
     }

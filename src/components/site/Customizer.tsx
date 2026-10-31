@@ -26,6 +26,8 @@ export function Customizer({ heading = "h2" }: { heading?: "h1" | "h2" }) {
     add(
       {
         id: `custom-${p.slug}-${color}-${initials}`,
+        productId: p.slug,
+        ...(initials ? { monogram: initials } : {}),
         name: `${p.name}, custom`,
         price,
         img: p.img,

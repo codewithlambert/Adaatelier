@@ -5,9 +5,7 @@ import { findProduct, money } from "@/lib/catalog";
 import { heroSlides, SLIDE_MS } from "@/lib/hero";
 import { loadGsap, prefersReducedMotion } from "@/lib/motion";
 
-const edgeFade = "linear-gradient(to right, transparent, #000 22%, #000 78%, transparent)";
-
-/** Stacked slides; a change of `active` wipes the next one in while the photo settles. */
+/** Stacked slides; a change of `active` wipes the next one in, re-raises ADA and settles the bag. */
 export function HeroMedia({ active }: { active: number }) {
   const root = useRef<HTMLDivElement>(null);
   const prev = useRef(active);
@@ -40,6 +38,12 @@ export function HeroMedia({ active }: { active: number }) {
           { scale: 1.06, xPercent: 0, duration: 1.8, ease: "expo.out" },
           0,
         )
+        .fromTo(
+          next.querySelectorAll("[data-letter]"),
+          { yPercent: 105 },
+          { yPercent: 0, stagger: 0.07, duration: 1.4, ease: "expo.out" },
+          0.35,
+        )
         .to(out.querySelector("img"), { xPercent: -8, scale: 1.12, duration: 1.5 }, 0)
         // slow push-in while the slide holds
         .to(next.querySelector("img"), { scale: 1, duration: SLIDE_MS / 1000, ease: "none" }, 1.8);
@@ -60,25 +64,31 @@ export function HeroMedia({ active }: { active: number }) {
             clipPath: i === 0 ? "inset(0% 0% 0% 0%)" : "inset(0% 0% 0% 100%)",
           }}
         >
-          {/* the bag sits in the open space: below the header pill, and above the headline on phones */}
+          {/* giant wordmark behind the bag */}
           <div
-            className={
-              s.wide
-                ? "absolute inset-x-0 bottom-[42%] top-20 overflow-hidden md:inset-0"
-                : "absolute inset-x-0 bottom-[42%] top-20 md:bottom-0 md:top-24"
-            }
+            data-hero-wordmark
+            aria-hidden
+            className="headline pointer-events-none absolute inset-x-0 top-[17%] flex justify-center overflow-hidden text-[40vw] leading-[0.82] tracking-[0.02em] text-white/95 md:top-[9%] md:text-[29vw]"
           >
+            {"ADA".split("").map((l, k) => (
+              <span
+                key={k}
+                data-letter
+                data-hero-letter={i === 0 ? "" : undefined}
+                className="inline-block"
+              >
+                {l}
+              </span>
+            ))}
+          </div>
+          {/* the bag in front: below the header pill, and above the headline on phones */}
+          <div className="absolute inset-x-0 bottom-[42%] top-24 md:bottom-[3%] md:top-[13%]">
             <img
               data-hero-img={i === 0 ? "" : undefined}
-              src={s.img}
+              src={s.cut}
               alt={s.alt}
               loading={i === 0 ? "eager" : "lazy"}
-              className={
-                s.wide
-                  ? "h-full w-full object-cover object-[50%_70%]"
-                  : "absolute left-1/2 top-0 h-full w-auto max-w-none -translate-x-1/2 object-contain"
-              }
-              style={s.wide ? undefined : { maskImage: edgeFade, WebkitMaskImage: edgeFade }}
+              className="absolute left-1/2 top-0 h-full w-auto max-w-none -translate-x-1/2 object-contain drop-shadow-[0_40px_45px_rgb(0_0_0/0.22)]"
             />
           </div>
         </div>

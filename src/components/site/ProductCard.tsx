@@ -15,6 +15,7 @@ export function ProductCard({ p }: { p: Product }) {
     add(
       {
         id: `${p.slug}-${color}`,
+        productId: p.slug,
         name: p.name,
         price: p.price,
         img: p.img,

@@ -58,12 +58,15 @@ function Index() {
     const intro = gsap
       .timeline({ paused: true, defaults: { ease: "expo.out" } })
       .from("[data-hero-img]", { scale: 1.3, duration: 2 })
+      .from("[data-hero-letter]", { yPercent: 105, stagger: 0.07, duration: 1.5 }, "<0.1")
       .from("[data-hero] [data-word]", { yPercent: 110, stagger: 0.06, duration: 1.2 }, "<0.25")
       .from("[data-hero-fade]", { opacity: 0, y: 18, stagger: 0.1, duration: 1.1 }, "<0.3");
     const stop = whenIntroDone(() => intro.play());
 
     const heroScroll = { trigger: "[data-hero]", start: "top top", end: "bottom top", scrub: true };
     gsap.to("[data-hero-media]", { yPercent: 18, ease: "none", scrollTrigger: heroScroll });
+    // the wordmark drifts up faster than the bag, for depth
+    gsap.to("[data-hero-wordmark]", { yPercent: -35, ease: "none", scrollTrigger: heroScroll });
     gsap.to("[data-marquee-track]", {
       xPercent: -12,
       ease: "none",

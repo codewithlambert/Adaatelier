@@ -85,6 +85,7 @@ export function SurpriseBox() {
     add(
       {
         id: `${p.slug}-${pick.color}`,
+        productId: p.slug,
         name: p.name,
         price: p.price,
         img: p.img,
