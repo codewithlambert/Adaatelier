@@ -212,7 +212,7 @@ language plpgsql security definer set search_path = '' as $$
 begin
   insert into public.notifications (kind, title, body, link)
   values ('system', 'New ' || new.rating || '-star review to approve',
-          new.name || ' on ' || new.product_id, '/#/products');
+          new.name || ' on ' || new.product_id, '/#/reviews');
   return new;
 end $$;
 drop trigger if exists reviews_notify on public.reviews;
@@ -478,7 +478,7 @@ create policy "staff mark notifications" on public.notifications for update to a
 do $$
 declare t text;
 begin
-  foreach t in array array['orders', 'notifications', 'products', 'store_settings'] loop
+  foreach t in array array['orders', 'notifications', 'products', 'store_settings', 'reviews', 'subscribers'] loop
     if not exists (select 1 from pg_publication_tables
                    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = t) then
       execute format('alter publication supabase_realtime add table public.%I', t);
