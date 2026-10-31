@@ -8,6 +8,7 @@ import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/
 import { useScrollDirection } from "@/hooks/use-scroll-direction";
 import { categories, money, products } from "@/lib/catalog";
 import { useCart } from "@/lib/cart";
+import { useLive } from "@/lib/live";
 import { loadGsap, markIntroDone, prefersReducedMotion } from "@/lib/motion";
 
 const wrap = "mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12";
@@ -22,6 +23,21 @@ const navLinks = [
 /** Header, footer, preloader, cursor, mobile dock, search and bag — shared by every page. */
 export function SiteLayout({ children }: { children: ReactNode }) {
   const [searchOpen, setSearchOpen] = useState(false);
+  // admin-controlled: announcement bar and maintenance mode
+  const settings = useLive()?.settings;
+  const [preview, setPreview] = useState(false);
+  useEffect(() => {
+    try {
+      if (new URLSearchParams(window.location.search).has("preview"))
+        sessionStorage.setItem("ada-preview", "1");
+      setPreview(sessionStorage.getItem("ada-preview") === "1");
+    } catch {
+      // storage blocked: no preview bypass
+    }
+  }, []);
+  const announcement =
+    settings?.announcement_enabled && settings.announcement.trim() ? settings.announcement : null;
+  const closed = !!settings?.maintenance && !preview;
   const { hidden, scrolled } = useScrollDirection();
   const path = useRouterState({ select: (s) => s.location.pathname });
   const root = useRef<HTMLDivElement>(null);
@@ -256,9 +272,15 @@ export function SiteLayout({ children }: { children: ReactNode }) {
         </span>
       </div>
 
+      {announcement && (
+        <div className="fixed inset-x-0 top-0 z-50 flex h-8 items-center justify-center overflow-hidden bg-ink px-4 text-center text-[11px] tracking-[0.08em] text-ink-foreground animate-in fade-in slide-in-from-top-2 duration-500">
+          <span className="truncate">{announcement}</span>
+        </div>
+      )}
+
       {/* Header: floating glass pill */}
       <header
-        className={`fixed inset-x-3 top-3 z-40 mx-auto max-w-[1100px] transition-[transform,opacity] duration-700 ease-[var(--ease-luxe)] md:inset-x-6 md:top-5 ${
+        className={`fixed inset-x-3 ${announcement ? "top-11 md:top-12" : "top-3 md:top-5"} z-40 mx-auto max-w-[1100px] transition-[transform,opacity] duration-700 ease-[var(--ease-luxe)] md:inset-x-6 ${
           hidden ? "pointer-events-none -translate-y-[160%] opacity-0" : "translate-y-0 opacity-100"
         }`}
       >
@@ -295,7 +317,23 @@ export function SiteLayout({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <main>{children}</main>
+      <main>
+        {closed ? (
+          <section className="grid min-h-[100svh] place-items-center bg-surface px-6 text-center">
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-1000">
+              <LogoMark className="mx-auto h-12 w-12" />
+              <h1 className="headline mt-8 text-6xl md:text-8xl">
+                Back <em>soon</em>
+              </h1>
+              <p className="mx-auto mt-6 max-w-sm text-sm leading-relaxed text-muted-foreground">
+                We&apos;re putting finishing touches on the atelier. Please check back shortly.
+              </p>
+            </div>
+          </section>
+        ) : (
+          children
+        )}
+      </main>
 
       <Footer />
       <MobileDock onSearch={() => setSearchOpen(true)} />

@@ -11,6 +11,7 @@ import { ProductCard } from "@/components/site/ProductCard";
 import { Words } from "@/components/site/Words";
 import { useReveal } from "@/hooks/use-reveal";
 import { categories, posts, products } from "@/lib/catalog";
+import { useAvailable } from "@/lib/live";
 import { prefersReducedMotion, whenIntroDone } from "@/lib/motion";
 import box from "@/assets/box.jpg";
 
@@ -43,7 +44,8 @@ function Index() {
   const [cat, setCat] = useState(0);
   const root = useRef<HTMLDivElement>(null);
   const activeCat = cat === 0 ? undefined : categories[cat - 1];
-  const shown = activeCat ? products.filter((p) => p.cat === activeCat) : products;
+  const available = useAvailable(products);
+  const shown = activeCat ? available.filter((p) => p.cat === activeCat) : available;
   const [slide, setSlide] = useState(0);
 
   // advance the hero every SLIDE_MS; picking a slide restarts the timer

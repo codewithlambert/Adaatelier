@@ -4,6 +4,7 @@ import { ProductCard } from "@/components/site/ProductCard";
 import { PageHeader } from "@/components/site/Words";
 import { useReveal } from "@/hooks/use-reveal";
 import { categories, products, type Category } from "@/lib/catalog";
+import { useAvailable } from "@/lib/live";
 
 type ShopSearch = { cat?: Category };
 
@@ -34,7 +35,8 @@ function Shop() {
   const root = useRef<HTMLDivElement>(null);
   useReveal(root);
 
-  const list = products
+  const available = useAvailable(products);
+  const list = available
     .filter((p) => !cat || p.cat === cat)
     .sort((a, b) => (sort === "low" ? a.price - b.price : sort === "high" ? b.price - a.price : 0));
 

@@ -13,6 +13,7 @@ import { TintedImage } from "@/components/site/Tint";
 import { Words } from "@/components/site/Words";
 import { colorName, money, type ColorId, type Product } from "@/lib/catalog";
 import { useCart } from "@/lib/cart";
+import { useLiveProduct } from "@/lib/live";
 import { flyToBag } from "@/lib/motion";
 
 type Props = {
@@ -23,8 +24,12 @@ type Props = {
 };
 
 /** Gallery + buy box for one product: colourways, quantity, add to bag and the info accordion. */
-export function ProductDetails({ product: p, initialColor = "onyx", onColorChange }: Props) {
-  const [color, setColor] = useState<ColorId>(initialColor);
+export function ProductDetails({ product: base, initialColor = "onyx", onColorChange }: Props) {
+  // admin-controlled name, price, stock and colourways
+  const { product: p, stock, colors } = useLiveProduct(base);
+  const soldOut = stock === 0;
+  const [picked, setColor] = useState<ColorId>(initialColor);
+  const color = colors && !colors.includes(picked) ? (colors[0] ?? "onyx") : picked;
   const [qty, setQty] = useState(1);
   const { add } = useCart();
   const gallery = useRef<HTMLDivElement>(null);
@@ -58,6 +63,7 @@ export function ProductDetails({ product: p, initialColor = "onyx", onColorChang
   };
 
   const addToBag = () => {
+    if (soldOut) return;
     add(
       {
         id: `${p.slug}-${color}`,
@@ -157,7 +163,13 @@ export function ProductDetails({ product: p, initialColor = "onyx", onColorChang
           <p className="text-xs text-muted-foreground">
             Colour — <span className="text-foreground">{colorName(color)}</span>
           </p>
-          <ColorSwatches value={color} onChange={pick} className="mt-4" size="lg" />
+          <ColorSwatches
+            value={color}
+            onChange={pick}
+            allowed={colors}
+            className="mt-4"
+            size="lg"
+          />
         </div>
 
         <div data-fade className="mt-8 flex flex-wrap items-center gap-3">
@@ -166,16 +178,25 @@ export function ProductDetails({ product: p, initialColor = "onyx", onColorChang
               <Minus className="h-3.5 w-3.5" />
             </button>
             <span className="w-6 text-center tabular-nums">{String(qty).padStart(2, "0")}</span>
-            <button onClick={() => setQty(qty + 1)} aria-label="Increase">
+            <button
+              onClick={() => setQty(stock === null ? qty + 1 : Math.min(stock, qty + 1))}
+              aria-label="Increase"
+            >
               <Plus className="h-3.5 w-3.5" />
             </button>
           </div>
-          <button data-magnetic onClick={addToBag} className="btn flex-1">
-            Add to bag — {money(p.price * qty)}
+          <button
+            data-magnetic
+            onClick={addToBag}
+            disabled={soldOut}
+            className="btn flex-1 disabled:pointer-events-none disabled:opacity-50"
+          >
+            {soldOut ? "Sold out" : `Add to bag — ${money(p.price * qty)}`}
           </button>
         </div>
         <p data-fade className="mt-4 text-xs text-muted-foreground">
-          Free 30-day returns · Ships in our eco box
+          {stock !== null && stock > 0 && stock < 5 ? `Only ${stock} left · ` : ""}Free 30-day
+          returns · Ships in our eco box
         </p>
 
         <Accordion
