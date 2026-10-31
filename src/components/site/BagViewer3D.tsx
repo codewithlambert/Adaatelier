@@ -5,7 +5,7 @@ import { TintedImage } from "@/components/site/Tint";
 import { bagColors, type BagModel, type ColorId } from "@/lib/catalog";
 import { prefersReducedMotion } from "@/lib/motion";
 
-const LAYERS = 12;
+const LAYERS = 24;
 const REST_TILT = -6;
 
 /** Darkens a #rrggbb colour for the side walls of the extrusion. */
@@ -31,6 +31,7 @@ export function BagViewer3D({ model, color, label, monogram, className = "" }: P
   const spin = useRef<HTMLDivElement>(null);
   const state = useRef({ y: -24, x: REST_TILT, vy: 0, dragging: false, px: 0, py: 0, idleAt: 0 });
   const [h, setH] = useState(420);
+  const [zoomed, setZoomed] = useState(false);
   const [hinted, setHinted] = useState(false);
 
   // fit the bag to the frame
@@ -59,6 +60,18 @@ export function BagViewer3D({ model, color, label, monogram, className = "" }: P
         s.x += (REST_TILT - s.x) * 0.06;
       }
       if (spin.current) spin.current.style.transform = `rotateX(${s.x}deg) rotateY(${s.y}deg)`;
+      // light from the front-left: faces brighten as they turn toward it, the sheen slides across
+      const r = (s.y * Math.PI) / 180;
+      const c = Math.cos(r);
+      const sn = Math.sin(r);
+      const el = box.current;
+      if (el) {
+        el.style.setProperty("--front", (0.78 + 0.24 * Math.max(c, 0)).toFixed(3));
+        el.style.setProperty("--back", (0.5 + 0.22 * Math.max(-c, 0)).toFixed(3));
+        el.style.setProperty("--wall", (0.72 + 0.55 * Math.abs(sn)).toFixed(3));
+        el.style.setProperty("--sheen", (50 - sn * 70).toFixed(1));
+        el.style.setProperty("--shadow", (0.35 + 0.65 * Math.abs(c)).toFixed(3));
+      }
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
@@ -107,21 +120,29 @@ export function BagViewer3D({ model, color, label, monogram, className = "" }: P
       ref={box}
       role="img"
       tabIndex={0}
-      aria-label={`${label}, 3D view. Drag or use the arrow keys to rotate.`}
+      aria-label={`${label}, 3D view. Drag or use the arrow keys to rotate; double-click to zoom.`}
       onPointerDown={onDown}
       onPointerMove={onMove}
       onPointerUp={onUp}
       onPointerCancel={onUp}
       onKeyDown={onKey}
+      onDoubleClick={() => setZoomed((z) => !z)}
       className={`relative cursor-grab touch-pan-y select-none overflow-hidden outline-none focus-visible:ring-1 focus-visible:ring-foreground active:cursor-grabbing ${className}`}
       style={{ perspective: "1600px" }}
     >
       {/* floor shadow */}
       <div
-        className="pointer-events-none absolute left-1/2 top-[calc(50%+var(--half))] h-8 -translate-x-1/2 rounded-[50%] bg-black/25 blur-xl"
-        style={{ width: w * 0.9, ["--half" as string]: `${h / 2 - 10}px` }}
+        className="pointer-events-none absolute left-1/2 top-[calc(50%+var(--half))] h-8 rounded-[50%] bg-black/25 blur-xl"
+        style={{
+          width: w * 0.9,
+          ["--half" as string]: `${h / 2 - 10}px`,
+          transform: "translateX(-50%) scaleX(var(--shadow, 1))",
+        }}
       />
-      <div className="absolute left-1/2 top-1/2 h-px w-px">
+      <div
+        className="absolute left-1/2 top-1/2 h-px w-px transition-transform duration-700 ease-[cubic-bezier(0.19,1,0.22,1)]"
+        style={{ transform: zoomed ? "scale(1.35)" : undefined }}
+      >
         <div ref={spin} className="preserve-3d absolute left-0 top-0">
           <ExtrudedBag model={model} color={color} h={h} monogram={monogram} />
         </div>
@@ -130,7 +151,7 @@ export function BagViewer3D({ model, color, label, monogram, className = "" }: P
       <span
         className={`pointer-events-none absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-full bg-card/80 px-3.5 py-1.5 text-[11px] text-muted-foreground backdrop-blur transition-opacity duration-700 ${hinted ? "opacity-0" : "opacity-100"}`}
       >
-        <Rotate3d className="h-3.5 w-3.5" strokeWidth={1.6} /> Drag to rotate
+        <Rotate3d className="h-3.5 w-3.5" strokeWidth={1.6} /> Drag to rotate · double-tap to zoom
       </span>
     </div>
   );
@@ -161,12 +182,26 @@ export function ExtrudedBag({ model, color, h, monogram, anchor = "center" }: Ex
     height: h,
     transform: `translate3d(${-w / 2}px, ${top}px, ${z}px)${extra}`,
   });
-  const silhouette: CSSProperties = {
-    background: shade(hex, color === "onyx" ? 0.6 : 0.42),
-    maskImage: `url(${model.src})`,
-    WebkitMaskImage: `url(${model.src})`,
+  const base = color === "onyx" ? 0.6 : 0.42;
+  const maskOf = (url: string): CSSProperties => ({
+    maskImage: `url(${url})`,
+    WebkitMaskImage: `url(${url})`,
     maskSize: "100% 100%",
     WebkitMaskSize: "100% 100%",
+  });
+  const cutout = maskOf(model.src);
+  // depth belongs to the body only: thin straps and chains stay a single plane at the front
+  const body = maskOf(model.body);
+  // walls: lighter near the two faces, darker in the middle, and bulging slightly like a stuffed bag
+  const wall = (i: number): CSSProperties => {
+    const t = (i + 1) / (LAYERS - 1);
+    const bulge = 1 + 0.025 * Math.sin(Math.PI * t);
+    return {
+      ...plane(-depth / 2 + step * (i + 1), ` scale(${bulge.toFixed(4)})`),
+      ...body,
+      background: shade(hex, base * (0.72 + 0.28 * Math.abs(2 * t - 1))),
+      filter: "brightness(var(--wall, 1))",
+    };
   };
   const photo = (
     <TintedImage
@@ -183,21 +218,33 @@ export function ExtrudedBag({ model, color, h, monogram, anchor = "center" }: Ex
       {/* back */}
       <div
         className="face"
-        style={{ ...plane(-depth / 2, " rotateY(180deg)"), filter: "brightness(0.7)" }}
+        style={{
+          ...plane(-depth / 2, " rotateY(180deg)"),
+          ...body,
+          filter: "brightness(var(--back, 0.7))",
+        }}
       >
         {photo}
       </div>
       {/* side walls */}
       {Array.from({ length: LAYERS - 2 }, (_, i) => (
-        <div
-          key={i}
-          className="face"
-          style={{ ...plane(-depth / 2 + step * (i + 1)), ...silhouette }}
-        />
+        <div key={i} className="face" style={wall(i)} />
       ))}
       {/* front */}
-      <div className="face" style={plane(depth / 2)}>
+      <div className="face" style={{ ...plane(depth / 2), filter: "brightness(var(--front, 1))" }}>
         {photo}
+        {/* moving sheen, clipped to the bag's outline */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0"
+          style={{
+            ...cutout,
+            backgroundImage:
+              "linear-gradient(100deg, transparent 32%, rgb(255 255 255 / 0.22) 47%, rgb(255 255 255 / 0.06) 55%, transparent 66%)",
+            backgroundSize: "260% 100%",
+            backgroundPosition: "calc(var(--sheen, 50) * 1%) 0",
+          }}
+        />
         {monogram && (
           <span
             key={monogram}

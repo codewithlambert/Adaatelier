@@ -10,14 +10,19 @@ import heroMask from "@/assets/hero-mask.png";
 import blog1Mask from "@/assets/blog1-mask.png";
 import bag13d from "@/assets/bag1-3d.png";
 import bag13dMask from "@/assets/bag1-3d-mask.png";
+import bag13dBody from "@/assets/bag1-3d-body.png";
 import bag23d from "@/assets/bag2-3d.png";
 import bag23dMask from "@/assets/bag2-3d-mask.png";
+import bag23dBody from "@/assets/bag2-3d-body.png";
 import bag33d from "@/assets/bag3-3d.png";
 import bag33dMask from "@/assets/bag3-3d-mask.png";
+import bag33dBody from "@/assets/bag3-3d-body.png";
 import hero3d from "@/assets/hero-3d.png";
 import hero3dMask from "@/assets/hero-3d-mask.png";
+import hero3dBody from "@/assets/hero-3d-body.png";
 import blog13d from "@/assets/blog1-3d.png";
 import blog13dMask from "@/assets/blog1-3d-mask.png";
+import blog13dBody from "@/assets/blog1-3d-body.png";
 
 /** Colourways. Onyx is the photographed original; the rest are tinted onto the bag mask. */
 export const bagColors = [
@@ -39,6 +44,8 @@ export const masks = { bag2: bag2Mask };
 export type BagModel = {
   src: string;
   mask: string;
+  /** solid body only (no straps or chains): the part that gets depth */
+  body: string;
   /** cut-out width / height */
   aspect: number;
   /** extrusion depth in px at a 420px-tall render */
@@ -75,7 +82,14 @@ export const products: Product[] = [
     cat: "Flap Bag",
     img: bag1,
     mask: bag1Mask,
-    model: { src: bag13d, mask: bag13dMask, aspect: 298 / 640, depth: 26, monogram: [0.5, 0.88] },
+    model: {
+      src: bag13d,
+      mask: bag13dMask,
+      body: bag13dBody,
+      aspect: 298 / 640,
+      depth: 26,
+      monogram: [0.5, 0.88],
+    },
     tagline: "Silver flap, onyx body, chain strap.",
     description:
       "A compact evening bag with a metallic flap and a polished push-lock. The chain strap drops to the hip or doubles up for the shoulder.",
@@ -94,7 +108,14 @@ export const products: Product[] = [
     cat: "Shopper",
     img: bag2,
     mask: bag2Mask,
-    model: { src: bag23d, mask: bag23dMask, aspect: 349 / 640, depth: 10, monogram: [0.5, 0.66] },
+    model: {
+      src: bag23d,
+      mask: bag23dMask,
+      body: bag23dBody,
+      aspect: 349 / 640,
+      depth: 10,
+      monogram: [0.5, 0.66],
+    },
     tagline: "Heavy canvas for every day.",
     description:
       "Our everyday canvas shopper, cut from a dense cotton weave that keeps its shape when full and folds flat when empty.",
@@ -113,7 +134,14 @@ export const products: Product[] = [
     cat: "Flap Bag",
     img: bag3,
     mask: bag3Mask,
-    model: { src: bag33d, mask: bag33dMask, aspect: 374 / 640, depth: 30, monogram: [0.5, 0.9] },
+    model: {
+      src: bag33d,
+      mask: bag33dMask,
+      body: bag33dBody,
+      aspect: 374 / 640,
+      depth: 30,
+      monogram: [0.5, 0.9],
+    },
     tagline: "The one from the Surprise Box.",
     description:
       "A rounded saddle-flap in smooth leather with a brushed-gold push-lock and an adjustable tan strap. Our signature piece.",
@@ -131,7 +159,14 @@ export const products: Product[] = [
     cat: "Shopper",
     img: hero,
     mask: heroMask,
-    model: { src: hero3d, mask: hero3dMask, aspect: 491 / 607, depth: 44, monogram: [0.5, 0.72] },
+    model: {
+      src: hero3d,
+      mask: hero3dMask,
+      body: hero3dBody,
+      aspect: 491 / 607,
+      depth: 44,
+      monogram: [0.5, 0.72],
+    },
     focus: "50% 70%",
     tagline: "Structured leather, open top.",
     description:
@@ -153,6 +188,7 @@ export const products: Product[] = [
     model: {
       src: blog13d,
       mask: blog13dMask,
+      body: blog13dBody,
       aspect: 459 / 632,
       depth: 60,
       monogram: [0.62, 0.55],
