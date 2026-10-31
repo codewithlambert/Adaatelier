@@ -419,6 +419,7 @@ function Footer() {
     {
       title: "Help",
       links: [
+        { label: "Track order", to: "/track" },
         { label: "Shipping", to: "/shipping" },
         { label: "Returns", to: "/returns" },
         { label: "Contact", to: "/contact" },

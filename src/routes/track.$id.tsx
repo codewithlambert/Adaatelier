@@ -47,6 +47,9 @@ type Tracked = {
   total: number;
   city: string | null;
   name: string;
+  /** written by the store in the admin */
+  status_note: string | null;
+  preparing_note: string | null;
   items: Item[];
 };
 
@@ -149,7 +152,7 @@ function TrackPage() {
       label: "Being prepared",
       at: null,
       done: ["processing", "shipped", "delivered"].includes(order.status),
-      note: "Checked, wrapped and boxed in Lagos",
+      note: order.preparing_note ?? undefined,
     },
     {
       label: "Shipped",
@@ -162,6 +165,8 @@ function TrackPage() {
     { label: "Delivered", at: order.delivered_at, done: order.status === "delivered" },
   ];
   const current = steps.findIndex((s) => !s.done);
+  // the store's message sits under the step the order has most recently reached
+  const latest = current === -1 ? steps.length - 1 : current - 1;
 
   const headline =
     order.status === "cancelled"
@@ -237,6 +242,11 @@ function TrackPage() {
                     )}
                     {i === 3 && order.tracking_ref && s.done && (
                       <CopyRef value={order.tracking_ref} />
+                    )}
+                    {i === latest && order.status_note && (
+                      <p className="mt-3 max-w-sm border-l-2 border-foreground bg-surface px-3 py-2 text-xs leading-relaxed animate-in fade-in duration-500">
+                        {order.status_note}
+                      </p>
                     )}
                   </div>
                 </li>

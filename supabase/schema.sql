@@ -112,6 +112,8 @@ alter table public.orders add column if not exists delivered_at timestamptz;
 alter table public.orders add column if not exists cancelled_at timestamptz;
 alter table public.orders add column if not exists courier text;
 alter table public.orders add column if not exists confirmation_sent_at timestamptz;
+-- optional note to this customer, shown on their tracking page under the current step
+alter table public.orders add column if not exists status_note text;
 alter table public.orders add column if not exists currency text not null default 'USD';
 create index if not exists orders_created_idx on public.orders (created_at desc);
 create index if not exists orders_status_idx on public.orders (status);
@@ -175,6 +177,9 @@ create table if not exists public.store_settings (
 );
 -- columns added after the first release (no-ops on a fresh database)
 alter table public.store_settings add column if not exists monogram_fee numeric(10, 2) not null default 10;
+-- shown on every tracking page while an order is being prepared (edited in Online store)
+alter table public.store_settings add column if not exists preparing_note text not null
+  default 'Checked, wrapped and boxed by hand';
 drop trigger if exists settings_touch on public.store_settings;
 create trigger settings_touch before update on public.store_settings
   for each row execute function public.touch_updated_at();
@@ -407,6 +412,8 @@ language sql stable security definer set search_path = '' as $$
     'total', o.total,
     'city', o.city,
     'name', c.name,
+    'status_note', o.status_note,
+    'preparing_note', (select s.preparing_note from public.store_settings s where s.id = 1),
     'items', coalesce((
       select jsonb_agg(jsonb_build_object(
         'product_id', i.product_id, 'name', i.product_name, 'color', i.color,
@@ -419,6 +426,18 @@ language sql stable security definer set search_path = '' as $$
 $$;
 revoke all on function public.track_order(text, uuid) from public;
 grant execute on function public.track_order(text, uuid) to anon, authenticated;
+
+-- "Track your order" form: order number + the email used at checkout gives back the tracking secret
+create or replace function public.find_order(p_id text, p_email text)
+returns uuid
+language sql stable security definer set search_path = '' as $$
+  select o.track_token
+  from public.orders o
+  join public.customers c on c.id = o.customer_id
+  where o.id = upper(trim(p_id)) and lower(c.email) = lower(trim(p_email))
+$$;
+revoke all on function public.find_order(text, text) from public;
+grant execute on function public.find_order(text, text) to anon, authenticated;
 
 -- discount preview for the checkout page (no counts or internals exposed)
 create or replace function public.check_discount(p_code text)
