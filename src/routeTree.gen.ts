@@ -16,6 +16,7 @@ import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CustomizeRouteImport } from './routes/customize'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ReturnsRouteImport } from './routes/returns'
+import { Route as SavedRouteImport } from './routes/saved'
 import { Route as ShippingRouteImport } from './routes/shipping'
 import { Route as ShopRouteImport } from './routes/shop'
 import { Route as TermsRouteImport } from './routes/terms'
@@ -58,6 +59,11 @@ const PrivacyRoute = PrivacyRouteImport.update({
 const ReturnsRoute = ReturnsRouteImport.update({
   id: '/returns',
   path: '/returns',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SavedRoute = SavedRouteImport.update({
+  id: '/saved',
+  path: '/saved',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ShippingRoute = ShippingRouteImport.update({
@@ -109,6 +115,7 @@ export interface FileRoutesByFullPath {
   '/customize': typeof CustomizeRoute
   '/privacy': typeof PrivacyRoute
   '/returns': typeof ReturnsRoute
+  '/saved': typeof SavedRoute
   '/shipping': typeof ShippingRoute
   '/shop': typeof ShopRoute
   '/terms': typeof TermsRoute
@@ -126,6 +133,7 @@ export interface FileRoutesByTo {
   '/customize': typeof CustomizeRoute
   '/privacy': typeof PrivacyRoute
   '/returns': typeof ReturnsRoute
+  '/saved': typeof SavedRoute
   '/shipping': typeof ShippingRoute
   '/shop': typeof ShopRoute
   '/terms': typeof TermsRoute
@@ -144,6 +152,7 @@ export interface FileRoutesById {
   '/customize': typeof CustomizeRoute
   '/privacy': typeof PrivacyRoute
   '/returns': typeof ReturnsRoute
+  '/saved': typeof SavedRoute
   '/shipping': typeof ShippingRoute
   '/shop': typeof ShopRoute
   '/terms': typeof TermsRoute
@@ -163,6 +172,7 @@ export interface FileRouteTypes {
     | '/customize'
     | '/privacy'
     | '/returns'
+    | '/saved'
     | '/shipping'
     | '/shop'
     | '/terms'
@@ -180,6 +190,7 @@ export interface FileRouteTypes {
     | '/customize'
     | '/privacy'
     | '/returns'
+    | '/saved'
     | '/shipping'
     | '/shop'
     | '/terms'
@@ -197,6 +208,7 @@ export interface FileRouteTypes {
     | '/customize'
     | '/privacy'
     | '/returns'
+    | '/saved'
     | '/shipping'
     | '/shop'
     | '/terms'
@@ -215,6 +227,7 @@ export interface RootRouteChildren {
   CustomizeRoute: typeof CustomizeRoute
   PrivacyRoute: typeof PrivacyRoute
   ReturnsRoute: typeof ReturnsRoute
+  SavedRoute: typeof SavedRoute
   ShippingRoute: typeof ShippingRoute
   ShopRoute: typeof ShopRoute
   TermsRoute: typeof TermsRoute
@@ -274,6 +287,13 @@ declare module '@tanstack/react-router' {
       path: '/returns'
       fullPath: '/returns'
       preLoaderRoute: typeof ReturnsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/saved': {
+      id: '/saved'
+      path: '/saved'
+      fullPath: '/saved'
+      preLoaderRoute: typeof SavedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/shipping': {
@@ -343,6 +363,7 @@ const rootRouteChildren: RootRouteChildren = {
   CustomizeRoute: CustomizeRoute,
   PrivacyRoute: PrivacyRoute,
   ReturnsRoute: ReturnsRoute,
+  SavedRoute: SavedRoute,
   ShippingRoute: ShippingRoute,
   ShopRoute: ShopRoute,
   TermsRoute: TermsRoute,

@@ -10,6 +10,7 @@ import {
   Twitter,
   X,
   Globe,
+  Heart,
 } from "lucide-react";
 import { MobileDock } from "@/components/MobileDock";
 import { Logo, LogoMark } from "@/components/site/Logo";
@@ -25,6 +26,7 @@ import { useScrollDirection } from "@/hooks/use-scroll-direction";
 import { categories, products } from "@/lib/catalog";
 import { useCart } from "@/lib/cart";
 import { useLive } from "@/lib/live";
+import { useWishlist } from "@/lib/saved";
 import { loadGsap, markIntroDone, prefersReducedMotion } from "@/lib/motion";
 import { supabase } from "@/lib/supabase";
 import { ADMIN_URL } from "@/lib/site";
@@ -330,6 +332,7 @@ export function SiteLayout({ children }: { children: ReactNode }) {
             ))}
           </nav>
           <div className="flex items-center gap-2">
+            <SavedLink lift={lift} />
             <button
               onClick={() => setSearchOpen(true)}
               className={`glass hidden h-[60px] w-[60px] place-items-center rounded-full transition-shadow duration-700 active:scale-95 md:grid ${lift}`}
@@ -365,6 +368,28 @@ export function SiteLayout({ children }: { children: ReactNode }) {
       <SearchSheet open={searchOpen} onOpenChange={setSearchOpen} />
       <CartSheet />
     </div>
+  );
+}
+
+/** Heart in the header: the wishlist, with how many bags are saved. */
+function SavedLink({ lift }: { lift: string }) {
+  const { list } = useWishlist();
+  return (
+    <Link
+      to="/saved"
+      aria-label={`Saved bags, ${list.length}`}
+      className={`glass relative hidden h-14 w-14 place-items-center rounded-full transition-shadow duration-700 active:scale-95 sm:grid md:h-[60px] md:w-[60px] ${lift}`}
+    >
+      <Heart className="h-4 w-4" strokeWidth={1.6} />
+      {list.length > 0 && (
+        <span
+          key={list.length}
+          className="absolute right-2 top-2 grid h-[17px] min-w-[17px] place-items-center rounded-full bg-foreground px-1 text-[10px] font-medium text-background animate-in zoom-in-50 duration-300"
+        >
+          {list.length}
+        </span>
+      )}
+    </Link>
   );
 }
 
@@ -421,6 +446,7 @@ function Footer() {
       title: "Help",
       links: [
         { label: "Track order", to: "/track" },
+        { label: "Saved bags", to: "/saved" },
         { label: "Shipping", to: "/shipping" },
         { label: "Returns", to: "/returns" },
         { label: "Contact", to: "/contact" },

@@ -1,5 +1,5 @@
 import { createFileRoute, notFound, useNavigate } from "@tanstack/react-router";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { ProductCard } from "@/components/site/ProductCard";
 import { ProductDetails } from "@/components/site/ProductDetails";
 import { Reviews } from "@/components/site/Reviews";
@@ -7,7 +7,8 @@ import { Words } from "@/components/site/Words";
 import { useReveal } from "@/hooks/use-reveal";
 import { absoluteUrl } from "@/lib/site";
 import { bagColors, findProduct, products, type ColorId } from "@/lib/catalog";
-import { fetchDbProduct } from "@/lib/live";
+import { fetchDbProduct, useCatalog } from "@/lib/live";
+import { markViewed, useRecent } from "@/lib/saved";
 
 type ProductSearch = { color?: ColorId };
 
@@ -72,6 +73,15 @@ function ProductView() {
   const root = useRef<HTMLDivElement>(null);
   useReveal(root);
   const related = products.filter((x) => x.slug !== p.slug).slice(0, 4);
+  // remember this bag, and show the others looked at recently
+  useEffect(() => markViewed(p.slug), [p.slug]);
+  const recentSlugs = useRecent();
+  const catalog = useCatalog(products);
+  const recent = recentSlugs
+    .filter((s) => s !== p.slug)
+    .map((s) => catalog.find((x) => x.slug === s))
+    .filter((x) => !!x)
+    .slice(0, 4);
 
   return (
     <div ref={root}>
@@ -101,6 +111,20 @@ function ProductView() {
           </div>
         </div>
       </section>
+      {recent.length > 0 && (
+        <section className="border-t py-24 md:py-32">
+          <div className="mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12">
+            <h2 className="headline text-4xl md:text-6xl">
+              Recently <em>viewed</em>
+            </h2>
+            <div className="mt-12 grid grid-cols-2 gap-x-3 gap-y-12 sm:gap-x-6 lg:grid-cols-4">
+              {recent.map((r) => (
+                <ProductCard key={r.slug} p={r} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
     </div>
   );
 }

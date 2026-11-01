@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
 import { ColorSwatches } from "@/components/site/ColorSwatches";
+import { SaveButton } from "@/components/site/SaveButton";
 import { TintedImage } from "@/components/site/Tint";
 import { colorName, type ColorId, type Product } from "@/lib/catalog";
 import { useCart } from "@/lib/cart";
@@ -40,6 +41,11 @@ export function ProductCard({ p: base }: { p: Product }) {
   return (
     <article data-product className="group">
       <div data-tilt className="relative overflow-hidden bg-surface">
+        <SaveButton
+          slug={p.slug}
+          name={p.name}
+          className="glass absolute right-2.5 top-2.5 z-10 h-9 w-9"
+        />
         <Link
           to="/product/$slug"
           params={{ slug: p.slug }}

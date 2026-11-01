@@ -128,6 +128,9 @@ alter table public.orders add column if not exists status_note text;
 alter table public.orders add column if not exists charge_currency text;
 alter table public.orders add column if not exists charge_amount numeric(14, 2);
 alter table public.orders add column if not exists paid_amount numeric(14, 2);
+-- when the shipped email and the unpaid reminder went out (each sent once at most)
+alter table public.orders add column if not exists shipped_email_at timestamptz;
+alter table public.orders add column if not exists reminder_sent_at timestamptz;
 alter table public.orders add column if not exists currency text not null default 'USD';
 create index if not exists orders_created_idx on public.orders (created_at desc);
 create index if not exists orders_status_idx on public.orders (status);

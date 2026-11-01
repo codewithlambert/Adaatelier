@@ -8,8 +8,8 @@
 // Secrets: STRIPE_WEBHOOK_SECRET (whsec_…) and BACHS_WEBHOOK_SECRET (whsec_…).
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { emailReady, env, esc, layout, money, paidLabel, sendEmail, trackUrl } from "../_shared/email.ts";
 
-const env = (k: string) => Deno.env.get(k) ?? "";
 const TOLERANCE_S = 300;
 
 async function hmacHex(secret: string, message: string) {
@@ -148,34 +148,13 @@ Deno.serve(async (req) => {
   return new Response("ok");
 });
 
-// ---------- confirmation email ----------
-// Brevo (free, can send from a verified Gmail address) or Resend (needs your own domain).
-// Secrets: EMAIL_FROM ("Ada Atelier <you@gmail.com>") plus BREVO_API_KEY or RESEND_API_KEY.
+// ---------- receipt email ----------
 
 type Db = ReturnType<typeof createClient>;
 type Line = { product_name: string; qty: number; unit_price: number; color: string; monogram: string | null };
 
-const money = (n: number) => `$${Number(n).toFixed(2)}`;
-/** "₦514,000" or "$331.00" */
-function paidLabel(amount: number, currency: string) {
-  if (currency === "USD") return money(amount);
-  try {
-    return new Intl.NumberFormat("en", {
-      style: "currency",
-      currency,
-      currencyDisplay: "narrowSymbol",
-      maximumFractionDigits: 0,
-    }).format(amount);
-  } catch {
-    return `${currency} ${amount.toLocaleString("en-US")}`;
-  }
-}
-const esc = (s: string) =>
-  s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
-
 async function sendConfirmation(db: Db, id: string) {
-  const from = env("EMAIL_FROM");
-  if (!from || (!env("BREVO_API_KEY") && !env("RESEND_API_KEY"))) return; // email not set up yet
+  if (!emailReady()) return; // email not set up yet
 
   const { data: o } = await db
     .from("orders")
@@ -187,9 +166,6 @@ async function sendConfirmation(db: Db, id: string) {
   if (!o || o.confirmation_sent_at) return;
   const customer = o.customers as unknown as { name: string; email: string };
   const lines = o.order_items as unknown as Line[];
-  const site = env("SITE_URL").replace(/\/$/, "");
-  const track = `${site}/track/${o.id}?t=${o.track_token}`;
-  const first = esc(customer.name.split(" ")[0] || "there");
 
   const rows = lines
     .map(
@@ -206,62 +182,21 @@ async function sendConfirmation(db: Db, id: string) {
     `<tr><td style="padding:4px 0;font-size:${strong ? 16 : 13}px;color:${strong ? "#151515" : "#8a857d"}">${label}</td>
      <td style="padding:4px 0;font-size:${strong ? 16 : 13}px;color:#151515;text-align:right">${value}</td></tr>`;
 
-  const html = `<!doctype html><html><body style="margin:0;background:#f4f2ee;font-family:Helvetica,Arial,sans-serif">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f2ee;padding:32px 12px">
-    <tr><td align="center">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;padding:40px 32px">
-        <tr><td style="font-family:Georgia,serif;font-size:13px;letter-spacing:6px;color:#151515">ADA ATELIER</td></tr>
-        <tr><td style="padding-top:36px;font-family:Georgia,serif;font-size:34px;line-height:1.1;color:#151515">Thank you, ${first}.</td></tr>
-        <tr><td style="padding-top:14px;font-size:14px;line-height:1.6;color:#55514b">
-          Your payment for order <strong style="color:#151515">${o.id}</strong> went through. We're preparing your bag
-          in Lagos now and will email you again when it ships.
-        </td></tr>
-        <tr><td style="padding-top:28px">
-          <a href="${track}" style="display:inline-block;background:#151515;color:#ffffff;text-decoration:none;font-size:12px;letter-spacing:2px;padding:16px 28px">TRACK YOUR ORDER</a>
-        </td></tr>
-        <tr><td style="padding-top:36px">
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${rows}</table>
+  const html = layout({
+    heading: `Thank you, ${esc(customer.name.split(" ")[0] || "there")}.`,
+    intro: `Your payment for order <strong style="color:#151515">${o.id}</strong> went through. We're preparing your bag in Lagos now and will email you again when it ships.`,
+    button: { label: "Track your order", url: trackUrl(o.id, o.track_token) },
+    body: `<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${rows}</table>
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px">
             ${total("Subtotal", money(o.subtotal))}
             ${Number(o.discount) > 0 ? total("Discount", `−${money(o.discount)}`) : ""}
             ${total("Shipping", Number(o.shipping) ? money(o.shipping) : "Free")}
             ${total("Total", money(o.total), o.currency === "USD" || !o.paid_amount)}
             ${o.currency !== "USD" && o.paid_amount ? total("Total paid", paidLabel(Number(o.paid_amount), String(o.currency)), true) : ""}
-          </table>
-        </td></tr>
-        <tr><td style="padding-top:32px;font-size:12px;line-height:1.6;color:#8a857d">
-          Paid with ${esc(o.payment_method)}. Free returns within 30 days. Questions? Just reply to this email.
-        </td></tr>
-      </table>
-    </td></tr>
-  </table></body></html>`;
-  const subject = `Your Ada Atelier order ${o.id} is confirmed`;
+          </table>`,
+    footer: `Paid with ${esc(o.payment_method)}. Free returns within 30 days. Questions? Just reply to this email.`,
+  });
 
-  await sendEmail({ to: customer.email, name: customer.name, subject, html, from });
+  await sendEmail({ to: customer.email, name: customer.name, subject: `Your Ada Atelier order ${o.id} is confirmed`, html });
   await db.from("orders").update({ confirmation_sent_at: new Date().toISOString() }).eq("id", o.id);
-}
-
-async function sendEmail(m: { to: string; name: string; subject: string; html: string; from: string }) {
-  // "Ada Atelier <you@gmail.com>" -> name + address
-  const match = /^(.*)<(.+)>$/.exec(m.from.trim());
-  const sender = { name: (match?.[1] ?? "Ada Atelier").trim(), email: (match?.[2] ?? m.from).trim() };
-
-  const res = env("BREVO_API_KEY")
-    ? await fetch("https://api.brevo.com/v3/smtp/email", {
-        method: "POST",
-        headers: { "api-key": env("BREVO_API_KEY"), "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sender,
-          replyTo: sender,
-          to: [{ email: m.to, name: m.name }],
-          subject: m.subject,
-          htmlContent: m.html,
-        }),
-      })
-    : await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${env("RESEND_API_KEY")}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ from: m.from, reply_to: sender.email, to: [m.to], subject: m.subject, html: m.html }),
-      });
-  if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
 }

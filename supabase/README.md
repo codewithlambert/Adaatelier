@@ -84,3 +84,21 @@ same webhooks in live mode with their own signing secrets.
 
   With your own domain later, [Resend](https://resend.com) works too: set `RESEND_API_KEY` instead of
   `BREVO_API_KEY`. Until either is set, payments still go through and the email is simply skipped.
+
+## More emails: shipped and unpaid reminders
+
+Both use the same email setup as the receipt (`EMAIL_FROM` plus `BREVO_API_KEY` or `RESEND_API_KEY`) and stay
+off until it's in place.
+
+- **Shipped.** Marking an online order *Shipped* in the admin emails the customer with the courier, tracking
+  number and tracking link (function `order-email`). Save the tracking number before marking it shipped so it's
+  included. Demo accounts can't trigger it.
+- **Unpaid reminder.** Every hour (a `pg_cron` job, `ada-unpaid-reminders`) online orders that reached the
+  payment page but stayed unpaid for 3 to 48 hours get one gentle email with a link to finish paying. The job
+  calls `order-email` with the `CRON_SECRET` secret; never more than one reminder per order.
+
+## Showing the admin to prospects
+
+Run [`make-demo.sql`](make-demo.sql) after adding a demo user. That account sees everything but the database
+refuses its changes, so it's safe to share. Set `VITE_DEMO_EMAIL` / `VITE_DEMO_PASSWORD` on the admin for a
+one-click "Explore the demo" button, and `VITE_ADMIN_URL` on the shop for a "See the admin" footer link.

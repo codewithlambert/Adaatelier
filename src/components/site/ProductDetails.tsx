@@ -12,6 +12,7 @@ import { ColorSwatches } from "@/components/site/ColorSwatches";
 import { TintedImage } from "@/components/site/Tint";
 import { Words } from "@/components/site/Words";
 import { RatingSummary } from "@/components/site/Reviews";
+import { SaveButton } from "@/components/site/SaveButton";
 import { colorName, type ColorId, type Product } from "@/lib/catalog";
 import { useCart } from "@/lib/cart";
 import { useLiveProduct } from "@/lib/live";
@@ -214,6 +215,11 @@ export function ProductDetails({ product: base, initialColor = "onyx", onColorCh
           >
             {soldOut ? "Sold out" : `Add to bag — ${format(p.price * qty)}`}
           </button>
+          <SaveButton
+            slug={p.slug}
+            name={p.name}
+            className="h-12 w-12 !rounded-none border border-foreground/30 hover:border-foreground"
+          />
         </div>
         <p data-fade className="mt-4 text-xs text-muted-foreground">
           {stock !== null && stock > 0 && stock < 5 ? `Only ${stock} left · ` : ""}Free 30-day
