@@ -27,7 +27,7 @@ type Props = {
 
 /** Gallery + buy box for one product: colourways, quantity, add to bag and the info accordion. */
 export function ProductDetails({ product: base, initialColor = "onyx", onColorChange }: Props) {
-  const { format, converted } = useCurrency();
+  const { format, converted, country } = useCurrency();
   // admin-controlled name, price, stock and colourways
   const { product: p, stock, colors } = useLiveProduct(base);
   const soldOut = stock === 0;
@@ -163,6 +163,13 @@ export function ProductDetails({ product: base, initialColor = "onyx", onColorCh
         {converted && (
           <p className="mt-1 text-[11px] text-muted-foreground">
             Charged in US dollars: {formatIn(p.price, "USD", 1)}
+          </p>
+        )}
+        {/* pay in 4 through Stripe (Klarna / Afterpay), offered outside Nigeria where Bachs takes payment */}
+        {country.code !== "NG" && p.price >= 50 && (
+          <p className="mt-2 text-xs text-muted-foreground">
+            or 4 interest-free payments of{" "}
+            <span className="text-foreground">{format(p.price / 4)}</span> with Klarna or Afterpay
           </p>
         )}
         <RatingSummary productId={p.slug} />

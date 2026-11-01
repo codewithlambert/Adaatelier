@@ -30,6 +30,31 @@ export const Route = createFileRoute("/product/$slug")({
           { name: "twitter:image", content: absoluteUrl(loaderData.img) },
         ]
       : [{ title: "Product — Ada Atelier" }],
+    // product details search engines read: name, photo, price and that it's in stock
+    scripts: loaderData
+      ? [
+          {
+            type: "application/ld+json",
+            children: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Product",
+              name: loaderData.name,
+              description: loaderData.description,
+              image: absoluteUrl(loaderData.img),
+              sku: loaderData.slug,
+              category: loaderData.cat,
+              brand: { "@type": "Brand", name: "Ada Atelier" },
+              offers: {
+                "@type": "Offer",
+                price: loaderData.price.toFixed(2),
+                priceCurrency: "USD",
+                availability: "https://schema.org/InStock",
+                url: absoluteUrl(`/product/${loaderData.slug}`),
+              },
+            }),
+          },
+        ]
+      : [],
   }),
   component: ProductPage,
 });

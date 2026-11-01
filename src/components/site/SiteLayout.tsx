@@ -501,6 +501,12 @@ function Footer() {
       >
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-6">
           <span>©2026 Ada Atelier Ltd. All rights reserved</span>
+          <Link to="/privacy" className="link-line">
+            Privacy
+          </Link>
+          <Link to="/terms" className="link-line">
+            Terms
+          </Link>
           {ADMIN_URL && (
             <a href={ADMIN_URL} target="_blank" rel="noreferrer" className="link-line">
               See the admin

@@ -705,7 +705,7 @@ function CheckoutForm() {
                     <p className="mt-2 max-w-sm text-xs leading-relaxed text-muted-foreground">
                       {nigeria
                         ? "You'll finish on Bachs' secure page and pay in naira at today's rate."
-                        : "You'll finish on Stripe's secure page. You're charged in US dollars."}
+                        : "You'll finish on Stripe's secure page, charged in US dollars. Pay in full or in 4 interest-free payments."}
                     </p>
                   </div>
                   <Lock className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.5} />
@@ -725,9 +725,21 @@ function CheckoutForm() {
                       ))}
                     </>
                   ) : (
-                    (["visa", "mastercard", "amex", "applepay", "googlepay"] as const).map((m) => (
-                      <PaymentMark key={m} id={m} />
-                    ))
+                    <>
+                      {(["visa", "mastercard", "amex", "applepay", "googlepay"] as const).map(
+                        (m) => (
+                          <PaymentMark key={m} id={m} />
+                        ),
+                      )}
+                      {["Klarna", "Afterpay"].map((m) => (
+                        <span
+                          key={m}
+                          className="grid h-7 place-items-center rounded-[5px] border border-black/10 bg-white px-2 text-[10px] font-semibold tracking-[0.02em] text-black"
+                        >
+                          {m}
+                        </span>
+                      ))}
+                    </>
                   )}
                 </div>
                 <p className="mt-4 text-[11px] text-muted-foreground">
