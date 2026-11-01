@@ -8,3 +8,6 @@ export const absoluteUrl = (path: string) =>
   /^https?:\/\//.test(path) ? path : `${SITE_URL}${path}`;
 
 export const SHARE_IMAGE = absoluteUrl("/og-image.jpg");
+
+/** The admin dashboard's address (VITE_ADMIN_URL), for the footer's "See the admin" link. */
+export const ADMIN_URL = String(import.meta.env["VITE_ADMIN_URL"] ?? "").replace(/\/$/, "");

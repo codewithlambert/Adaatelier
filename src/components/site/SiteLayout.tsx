@@ -27,6 +27,7 @@ import { useCart } from "@/lib/cart";
 import { useLive } from "@/lib/live";
 import { loadGsap, markIntroDone, prefersReducedMotion } from "@/lib/motion";
 import { supabase } from "@/lib/supabase";
+import { ADMIN_URL } from "@/lib/site";
 import { CountryPicker } from "@/lib/currency";
 import { useCurrency } from "@/lib/currency";
 
@@ -500,6 +501,11 @@ function Footer() {
       >
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-6">
           <span>©2026 Ada Atelier Ltd. All rights reserved</span>
+          {ADMIN_URL && (
+            <a href={ADMIN_URL} target="_blank" rel="noreferrer" className="link-line">
+              See the admin
+            </a>
+          )}
           <label className="flex items-center gap-1.5">
             <Globe className="h-3.5 w-3.5" strokeWidth={1.5} />
             <CountryPicker className="text-ink-foreground [&_option]:text-black" />

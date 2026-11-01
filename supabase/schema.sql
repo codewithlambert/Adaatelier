@@ -10,7 +10,7 @@
 create table if not exists public.staff (
   id          uuid primary key references auth.users (id) on delete cascade,
   full_name   text not null default '',
-  role        text not null default 'staff' check (role in ('owner', 'manager', 'staff')),
+  role        text not null default 'staff' check (role in ('owner', 'manager', 'staff', 'demo')),
   created_at  timestamptz not null default now()
 );
 
@@ -23,6 +23,16 @@ $$;
 create or replace function public.is_owner() returns boolean
 language sql stable security definer set search_path = '' as $$
   select exists (select 1 from public.staff where id = auth.uid() and role = 'owner');
+$$;
+
+-- 'demo' (for showing the admin to prospects): sees everything, changes nothing
+alter table public.staff drop constraint if exists staff_role_check;
+alter table public.staff add constraint staff_role_check
+  check (role in ('owner', 'manager', 'staff', 'demo'));
+
+create or replace function public.can_edit() returns boolean
+language sql stable security definer set search_path = '' as $$
+  select exists (select 1 from public.staff where id = auth.uid() and role in ('owner', 'manager', 'staff'));
 $$;
 
 create or replace function public.can_manage() returns boolean
@@ -481,10 +491,10 @@ create policy "anyone submits a review" on public.reviews for insert to anon, au
   with check (status = 'pending');
 drop policy if exists "staff moderate reviews" on public.reviews;
 create policy "staff moderate reviews" on public.reviews for update to authenticated
-  using (public.is_staff()) with check (public.is_staff());
+  using (public.can_edit()) with check (public.can_edit());
 drop policy if exists "staff delete reviews" on public.reviews;
 create policy "staff delete reviews" on public.reviews for delete to authenticated
-  using (public.is_staff());
+  using (public.can_edit());
 
 -- newsletter: anyone can sign up; only staff can see the list
 drop policy if exists "anyone subscribes" on public.subscribers;
@@ -495,7 +505,7 @@ create policy "staff read subscribers" on public.subscribers for select to authe
   using (public.is_staff());
 drop policy if exists "staff remove subscribers" on public.subscribers;
 create policy "staff remove subscribers" on public.subscribers for delete to authenticated
-  using (public.is_staff());
+  using (public.can_edit());
 
 -- staff: everyone on the team can see the team; only owners change it
 drop policy if exists "staff can read team" on public.staff;
@@ -510,26 +520,35 @@ create policy "public reads active products" on public.products for select to an
   using (status = 'active' or public.is_staff());
 drop policy if exists "staff write products" on public.products;
 create policy "staff write products" on public.products for all to authenticated
-  using (public.is_staff()) with check (public.is_staff());
+  using (public.can_edit()) with check (public.can_edit());
 
 -- customers / orders / items: staff only (shoppers can read their own once accounts exist)
 drop policy if exists "staff manage customers" on public.customers;
+drop policy if exists "staff read customers" on public.customers;
+create policy "staff read customers" on public.customers for select to authenticated
+  using (public.is_staff());
 create policy "staff manage customers" on public.customers for all to authenticated
-  using (public.is_staff()) with check (public.is_staff());
+  using (public.can_edit()) with check (public.can_edit());
 drop policy if exists "shoppers read own profile" on public.customers;
 create policy "shoppers read own profile" on public.customers for select to authenticated
   using (user_id = auth.uid());
 
 drop policy if exists "staff manage orders" on public.orders;
+drop policy if exists "staff read orders" on public.orders;
+create policy "staff read orders" on public.orders for select to authenticated
+  using (public.is_staff());
 create policy "staff manage orders" on public.orders for all to authenticated
-  using (public.is_staff()) with check (public.is_staff());
+  using (public.can_edit()) with check (public.can_edit());
 drop policy if exists "shoppers read own orders" on public.orders;
 create policy "shoppers read own orders" on public.orders for select to authenticated
   using (customer_id in (select id from public.customers where user_id = auth.uid()));
 
 drop policy if exists "staff manage order items" on public.order_items;
+drop policy if exists "staff read order items" on public.order_items;
+create policy "staff read order items" on public.order_items for select to authenticated
+  using (public.is_staff());
 create policy "staff manage order items" on public.order_items for all to authenticated
-  using (public.is_staff()) with check (public.is_staff());
+  using (public.can_edit()) with check (public.can_edit());
 drop policy if exists "shoppers read own order items" on public.order_items;
 create policy "shoppers read own order items" on public.order_items for select to authenticated
   using (order_id in (select o.id from public.orders o
@@ -538,11 +557,17 @@ create policy "shoppers read own order items" on public.order_items for select t
 
 -- discounts and campaigns: staff only (shoppers validate codes through check_discount)
 drop policy if exists "staff manage discounts" on public.discounts;
+drop policy if exists "staff read discounts" on public.discounts;
+create policy "staff read discounts" on public.discounts for select to authenticated
+  using (public.is_staff());
 create policy "staff manage discounts" on public.discounts for all to authenticated
-  using (public.is_staff()) with check (public.is_staff());
+  using (public.can_edit()) with check (public.can_edit());
 drop policy if exists "staff manage campaigns" on public.campaigns;
+drop policy if exists "staff read campaigns" on public.campaigns;
+create policy "staff read campaigns" on public.campaigns for select to authenticated
+  using (public.is_staff());
 create policy "staff manage campaigns" on public.campaigns for all to authenticated
-  using (public.is_staff()) with check (public.is_staff());
+  using (public.can_edit()) with check (public.can_edit());
 
 -- store settings: anyone can read (the shop needs them); owners and managers change them
 drop policy if exists "public reads settings" on public.store_settings;
@@ -556,7 +581,7 @@ drop policy if exists "staff read notifications" on public.notifications;
 create policy "staff read notifications" on public.notifications for select to authenticated using (public.is_staff());
 drop policy if exists "staff mark notifications" on public.notifications;
 create policy "staff mark notifications" on public.notifications for update to authenticated
-  using (public.is_staff()) with check (public.is_staff());
+  using (public.can_edit()) with check (public.can_edit());
 
 -- ---------------------------------------------------------------------
 -- 9. Realtime: the admin subscribes to these
@@ -584,13 +609,13 @@ create policy "public views product images" on storage.objects for select to ano
   using (bucket_id = 'product-images');
 drop policy if exists "staff upload product images" on storage.objects;
 create policy "staff upload product images" on storage.objects for insert to authenticated
-  with check (bucket_id = 'product-images' and public.is_staff());
+  with check (bucket_id = 'product-images' and public.can_edit());
 drop policy if exists "staff change product images" on storage.objects;
 create policy "staff change product images" on storage.objects for update to authenticated
-  using (bucket_id = 'product-images' and public.is_staff());
+  using (bucket_id = 'product-images' and public.can_edit());
 drop policy if exists "staff delete product images" on storage.objects;
 create policy "staff delete product images" on storage.objects for delete to authenticated
-  using (bucket_id = 'product-images' and public.is_staff());
+  using (bucket_id = 'product-images' and public.can_edit());
 
 -- ---------------------------------------------------------------------
 -- 11. Starting data (skipped if rows already exist)
