@@ -598,31 +598,31 @@ create policy "staff delete product images" on storage.objects for delete to aut
 insert into public.store_settings (id) values (1) on conflict (id) do nothing;
 
 insert into public.products (id, name, category, price, stock, sold, status, tagline, description, details, colors, focus, is_new, sort_order) values
-  ('flap-bag-001', 'Flap Bag No. 001', 'Flap Bag', 245, 42, 188, 'active', 'Silver flap, onyx body, chain strap.',
+  ('flap-bag-001', 'Ife Chain Bag', 'Flap Bag', 245, 42, 188, 'active', 'Silver flap, onyx body, chain strap.',
    'A compact evening bag with a metallic flap and a polished push-lock. The chain strap drops to the hip or doubles up for the shoulder.',
    '{"Metallic coated leather flap","Smooth onyx body","Detachable chain strap","W 22 × H 15 × D 7 cm"}', '{onyx,silver,bordeaux}', null, true, 1),
-  ('shopper-002', 'Shopper No. 002', 'Shopper', 145, 8, 162, 'active', 'Heavy canvas for every day.',
+  ('shopper-002', 'Oja Shopper', 'Shopper', 145, 8, 162, 'active', 'Heavy canvas for every day.',
    'Our everyday canvas shopper, cut from a dense cotton weave that keeps its shape when full and folds flat when empty.',
    '{"Heavyweight cotton canvas","Reinforced X-stitched handles","Fits a 14-inch laptop","W 38 × H 42 cm"}', '{onyx,sand,forest}', null, true, 2),
-  ('flap-bag-003', 'Flap Bag No. 003', 'Flap Bag', 295, 27, 271, 'active', 'The one from the Surprise Box.',
+  ('flap-bag-003', 'Amara Saddle Bag', 'Flap Bag', 295, 27, 271, 'active', 'The one from the Surprise Box.',
    'A rounded saddle-flap in smooth leather with a brushed-gold push-lock and an adjustable tan strap. Our signature piece.',
    '{"Smooth calf-grain leather","Brushed-gold hardware","Adjustable tan strap","W 26 × H 18 × D 8 cm"}', '{onyx,cognac,bordeaux,sand}', null, false, 3),
-  ('tote-004', 'Tote No. 004', 'Tote', 345, 12, 214, 'active', 'Structured leather, open top.',
+  ('tote-004', 'Eko Tote', 'Tote', 345, 12, 214, 'active', 'Structured leather, open top.',
    'A clean-lined leather tote with angled side panels and long handles that sit comfortably on the shoulder.',
    '{"Full-grain leather","Angled side gussets","Interior slip pocket","W 34 × H 28 × D 14 cm"}', '{onyx,cognac}', '50% 70%', false, 4),
-  ('backpack-005', 'Backpack No. 005', 'Backpack', 265, 15, 97, 'active', 'Water-resistant nylon, tonal zips.',
+  ('backpack-005', 'Irin Backpack', 'Backpack', 265, 15, 97, 'active', 'Water-resistant nylon, tonal zips.',
    'A minimal daypack in water-resistant nylon with a padded laptop sleeve and tonal matte zips that disappear into the body.',
    '{"Water-resistant nylon","Padded 15-inch laptop sleeve","Front zip pocket","Capacity 18 L"}', '{onyx,forest}', null, false, 5),
-  ('ankara-shopper-006', 'Ankara Shopper No. 006', 'Ankara', 165, 18, 0, 'active', 'Indigo wax print, sun rings in mustard and teal.',
+  ('ankara-shopper-006', 'Oorun Ankara Shopper', 'Ankara', 165, 18, 0, 'active', 'Indigo wax print, sun rings in mustard and teal.',
    'Our everyday shopper in a heavy cotton wax print, the kind sold by the bolt in Lagos markets. Each panel is cut by hand, so the rings fall a little differently on every bag.',
    '{"100% cotton wax print, lined in canvas","Handmade in Lagos, Nigeria","Reinforced handles, fits a 14-inch laptop","W 38 × H 42 cm"}', '{onyx}', null, true, 6),
-  ('ankara-tote-007', 'Ankara Tote No. 007', 'Ankara', 325, 10, 0, 'active', 'Plum print with nested diamonds, leather trim.',
+  ('ankara-tote-007', 'Okuta Ankara Tote', 'Ankara', 325, 10, 0, 'active', 'Plum print with nested diamonds, leather trim.',
    'The structured tote, wrapped in a plum wax print of nested diamonds and finished with leather edges. Bold enough for the weekend, neat enough for the office.',
    '{"Cotton wax print over a leather base","Handmade in Lagos, Nigeria","Angled side gussets, interior slip pocket","W 34 × H 28 × D 14 cm"}', '{onyx}', '50% 70%', true, 7),
-  ('ankara-saddle-008', 'Ankara Saddle No. 008', 'Ankara', 285, 12, 0, 'active', 'Rainbow fans on cream, tan leather strap.',
+  ('ankara-saddle-008', 'Ayo Ankara Saddle', 'Ankara', 285, 12, 0, 'active', 'Rainbow fans on cream, tan leather strap.',
    'Our signature saddle flap, made in a cream wax print of stacked fans. The tan strap and brushed-gold lock keep it grown-up.',
    '{"Cotton wax print, smooth leather trim","Handmade in Lagos, Nigeria","Adjustable tan strap, brushed-gold lock","W 26 × H 18 × D 8 cm"}', '{onyx}', null, false, 8),
-  ('mudcloth-backpack-009', 'Mud Cloth Backpack No. 009', 'African Craft', 310, 6, 0, 'active', 'Hand-painted mud cloth from Mali.',
+  ('mudcloth-backpack-009', 'Bamako Mud Cloth Backpack', 'African Craft', 310, 6, 0, 'active', 'Hand-painted mud cloth from Mali.',
    'A daypack faced in bògòlanfini, the cotton cloth Malian artisans dye with leaves and paint with fermented river mud. No two bolts match, so no two bags do either.',
    '{"Hand-dyed cotton mud cloth, nylon lining","Cloth from Mali, sewn in Lagos","Padded 15-inch laptop sleeve","Capacity 18 L"}', '{onyx}', null, false, 9)
 on conflict (id) do nothing;
@@ -635,6 +635,22 @@ update public.products p set price = v.new_price
                ('ankara-tote-007', 89, 325), ('ankara-saddle-008', 79, 285),
                ('mudcloth-backpack-009', 98, 310)) as v (id, old_price, new_price)
  where p.id = v.id and p.price = v.old_price;
+
+-- demo bags renamed from numbers to names (a name changed in the admin is kept)
+update public.products p set name = v.new_name
+from (values
+  ('Mud Cloth Backpack No. 009', 'Bamako Mud Cloth Backpack'),
+  ('Ankara Shopper No. 006', 'Oorun Ankara Shopper'),
+  ('Ankara Saddle No. 008', 'Ayo Ankara Saddle'),
+  ('Ankara Tote No. 007', 'Okuta Ankara Tote'),
+  ('Bucket Bag No. 006', 'Ola Bucket Bag'),
+  ('Flap Bag No. 001', 'Ife Chain Bag'),
+  ('Flap Bag No. 003', 'Amara Saddle Bag'),
+  ('Backpack No. 005', 'Irin Backpack'),
+  ('Shopper No. 002', 'Oja Shopper'),
+  ('Tote No. 004', 'Eko Tote')
+) as v (old_name, new_name)
+where p.name = v.old_name;
 
 insert into public.reviews (product_id, name, rating, body, status)
 select v.* from (values

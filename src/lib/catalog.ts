@@ -97,7 +97,7 @@ export type Category = (typeof categories)[number];
 export const products: Product[] = [
   {
     slug: "flap-bag-001",
-    name: "Flap Bag No. 001",
+    name: "Ife Chain Bag",
     price: 245,
     cat: "Flap Bag",
     img: bag1,
@@ -123,7 +123,7 @@ export const products: Product[] = [
   },
   {
     slug: "shopper-002",
-    name: "Shopper No. 002",
+    name: "Oja Shopper",
     price: 145,
     cat: "Shopper",
     img: bag2,
@@ -149,7 +149,7 @@ export const products: Product[] = [
   },
   {
     slug: "flap-bag-003",
-    name: "Flap Bag No. 003",
+    name: "Amara Saddle Bag",
     price: 295,
     cat: "Flap Bag",
     img: bag3,
@@ -174,7 +174,7 @@ export const products: Product[] = [
   },
   {
     slug: "tote-004",
-    name: "Tote No. 004",
+    name: "Eko Tote",
     price: 345,
     cat: "Tote",
     img: hero,
@@ -200,7 +200,7 @@ export const products: Product[] = [
   },
   {
     slug: "backpack-005",
-    name: "Backpack No. 005",
+    name: "Irin Backpack",
     price: 265,
     cat: "Backpack",
     img: blog1,
@@ -225,7 +225,7 @@ export const products: Product[] = [
   },
   {
     slug: "ankara-shopper-006",
-    name: "Ankara Shopper No. 006",
+    name: "Oorun Ankara Shopper",
     price: 165,
     cat: "Ankara",
     img: ankaraShopper,
@@ -251,7 +251,7 @@ export const products: Product[] = [
   },
   {
     slug: "ankara-tote-007",
-    name: "Ankara Tote No. 007",
+    name: "Okuta Ankara Tote",
     price: 325,
     cat: "Ankara",
     img: ankaraTote,
@@ -278,7 +278,7 @@ export const products: Product[] = [
   },
   {
     slug: "ankara-saddle-008",
-    name: "Ankara Saddle No. 008",
+    name: "Ayo Ankara Saddle",
     price: 285,
     cat: "Ankara",
     img: ankaraSaddle,
@@ -303,7 +303,7 @@ export const products: Product[] = [
   },
   {
     slug: "mudcloth-backpack-009",
-    name: "Mud Cloth Backpack No. 009",
+    name: "Bamako Mud Cloth Backpack",
     price: 310,
     cat: "African Craft",
     img: mudclothBackpack,
@@ -350,7 +350,7 @@ export const posts: Post[] = [
     img: blog1,
     body: [
       "A student's bag works harder than most. It carries a laptop, notebooks, a water bottle and often a change of clothes, then gets dropped on lecture-hall floors and stuffed under bus seats.",
-      "Look first at the base. A reinforced bottom panel keeps the bag standing and protects the stitching where it wears fastest. Our Backpack No. 005 uses a doubled nylon base for exactly this reason.",
+      "Look first at the base. A reinforced bottom panel keeps the bag standing and protects the stitching where it wears fastest. Our Irin Backpack uses a doubled nylon base for exactly this reason.",
       "Next, the laptop sleeve. It should be padded on all sides and sit slightly above the bottom of the bag, so the laptop never takes the impact when the bag is set down.",
       "Finally, weight. A good empty backpack weighs under a kilogram. Every gram you save on the bag is a gram you can spend on books.",
     ],
@@ -376,7 +376,7 @@ export const posts: Post[] = [
     excerpt: "The best price and the best materials, picked for you.",
     img: bag1,
     body: [
-      "This week's pick is Flap Bag No. 001: a silver metallic flap over a smooth onyx body, finished with a polished push-lock.",
+      "This week's pick is Ife Chain Bag: a silver metallic flap over a smooth onyx body, finished with a polished push-lock.",
       "It's small enough for an evening out and holds a phone, cardholder and keys without bulging. The chain strap can be worn long or doubled.",
     ],
   },

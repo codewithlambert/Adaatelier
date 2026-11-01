@@ -54,7 +54,7 @@ function About() {
         <div data-parallax className="overflow-hidden bg-surface">
           <img
             src={ankaraTote}
-            alt="Ankara Tote No. 007 in a plum diamond wax print"
+            alt="Okuta Ankara Tote in a plum diamond wax print"
             className="aspect-[4/5] w-full scale-110 object-cover md:aspect-[21/9]"
           />
         </div>
@@ -139,7 +139,7 @@ function About() {
           <div data-img-reveal className="overflow-hidden bg-surface">
             <img
               src={ankaraShopper}
-              alt="Ankara Shopper No. 006 in an indigo wax print"
+              alt="Oorun Ankara Shopper in an indigo wax print"
               className="aspect-[4/5] w-full object-cover"
             />
           </div>
